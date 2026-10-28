@@ -1,95 +1,92 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import { redirect } from "next/navigation";
+import { requireProfile } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
+import { firstDayOf, monthKey, monthLabel, recentMonths, todayISO } from "@/lib/months";
+import CheckInButton from "./CheckInButton";
+import { signOut } from "./login/actions";
 
-export default function Home() {
+type Row = {
+  work_date: string;
+  status: "pending" | "approved" | "rejected";
+  multiplier: number;
+  paid: boolean;
+};
+
+export default async function WorkerHome() {
+  const profile = await requireProfile();
+  if (profile.role === "admin") redirect("/admin");
+
+  const months = recentMonths(3);
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("checkins")
+    .select("work_date, status, multiplier, paid")
+    .eq("worker_id", profile.id)
+    .gte("work_date", firstDayOf(months[months.length - 1]));
+  const rows = (data ?? []) as Row[];
+
+  const today = rows.find((r) => r.work_date === todayISO());
+
+  const summary = months.map((month) => {
+    const inMonth = rows.filter((r) => monthKey(r.work_date) === month);
+    const approved = inMonth.filter((r) => r.status === "approved");
+    const days = approved.reduce((sum, r) => sum + Number(r.multiplier), 0);
+    const paidCount = approved.filter((r) => r.paid).length;
+    const pending = inMonth.filter((r) => r.status === "pending").length;
+    let paid = "Not paid yet";
+    if (approved.length === 0) paid = "-";
+    else if (paidCount === approved.length) paid = "Paid";
+    else if (paidCount > 0) paid = "Partly paid";
+    return { month, days, pending, paid };
+  });
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <main className="narrow">
+      <header className="topbar">
+        <h1>Hi {profile.full_name || "there"}</h1>
+        <form action={signOut}>
+          <button className="link">Log out</button>
+        </form>
+      </header>
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      <section className="card stack">
+        <h2>Today</h2>
+        {today ? (
+          <p>
+            You checked in today.{" "}
+            {today.status === "pending" && "Waiting for the admin to approve."}
+            {today.status === "approved" && "Approved."}
+            {today.status === "rejected" && "The admin did not approve this day."}
+          </p>
+        ) : (
+          <CheckInButton />
+        )}
+      </section>
+
+      <section className="card">
+        <h2>Your days</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Days</th>
+              <th>Paid</th>
+            </tr>
+          </thead>
+          <tbody>
+            {summary.map((s) => (
+              <tr key={s.month}>
+                <td>{monthLabel(s.month)}</td>
+                <td>
+                  {s.days}
+                  {s.pending > 0 && <span className="muted"> (+{s.pending} waiting)</span>}
+                </td>
+                <td>{s.paid}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+    </main>
   );
 }

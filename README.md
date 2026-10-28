@@ -1,36 +1,34 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Work days
 
-## Getting Started
+A web app where workers check in when they arrive at work, an admin approves each day, and everyone can see how many days were worked each month.
 
-First, run the development server:
+- **Workers** tap "I've arrived at work". The app records the date and the phone's location. They see their total days for the last 3 months and whether each month is paid.
+- **Admins** approve or reject each check-in, choose whether it counts as 1, 1.5 or 2 days, and add where the work was, for whom, and a note. They see every worker's days and places per month and mark days as paid.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Built with Next.js and Supabase (login and database).
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Create a free project at [supabase.com](https://supabase.com).
+2. In the Supabase dashboard, open **SQL Editor**, paste the contents of `supabase/migrations/0001_init.sql`, and run it.
+3. Copy `.env.example` to `.env.local` and fill in the URL and anon key from **Project Settings > API**.
+4. Run the app:
+   ```
+   npm install
+   npm run dev
+   ```
+5. Open http://localhost:3000, create your own account, then make yourself the admin by running this in the SQL Editor:
+   ```sql
+   update profiles set role = 'admin' where id = (select id from auth.users where email = 'you@example.com');
+   ```
+   After that, you can make other people admins from their page in the app.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+By default Supabase asks new users to confirm their email. You can turn this off under **Authentication > Sign In / Providers > Email > Confirm email**.
 
-## Learn More
+## How the rules are enforced
 
-To learn more about Next.js, take a look at the following resources:
+The database itself checks permissions (row level security), not only the screens:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- A worker can only create a check-in for themselves, for today, and it always starts as pending, 1 day, unpaid.
+- A worker can only read their own check-ins.
+- Only admins can approve, change the 1.5x / 2x value, add notes, or mark days paid.
