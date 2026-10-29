@@ -32,10 +32,10 @@ async function finish(result: { error: { message: string } | null; data?: unknow
 }
 
 // Approve, reject or edit a check-in, with the multiplier and the admin's note.
-export async function saveCheckin(formData: FormData) {
+// Each button binds its own decision, because a clicked button's name/value isn't sent with the form.
+export async function saveCheckin(decision: "approve" | "reject" | "save", formData: FormData) {
   const admin = await requireAdmin();
   const supabase = await createClient();
-  const decision = String(formData.get("decision"));
 
   const update: Record<string, unknown> = {
     multiplier: Number(formData.get("multiplier") ?? 1),

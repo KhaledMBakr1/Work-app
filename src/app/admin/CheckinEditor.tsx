@@ -30,7 +30,7 @@ export default function CheckinEditor({ checkin, workerName }: Props) {
   });
 
   return (
-    <form action={saveCheckin} className="card stack">
+    <form action={saveCheckin.bind(null, "save")} className="card stack">
       <input type="hidden" name="id" value={checkin.id} />
       <div className="row between">
         <strong>
@@ -73,17 +73,17 @@ export default function CheckinEditor({ checkin, workerName }: Props) {
       </label>
       <div className="row">
         {checkin.status !== "approved" && (
-          <button name="decision" value="approve">
+          <button formAction={saveCheckin.bind(null, "approve")}>
             Approve
           </button>
         )}
         {checkin.status !== "rejected" && (
-          <button name="decision" value="reject" className="secondary">
+          <button formAction={saveCheckin.bind(null, "reject")} className="secondary">
             Reject
           </button>
         )}
         {checkin.status !== "pending" && (
-          <button name="decision" value="save" className="secondary">
+          <button formAction={saveCheckin.bind(null, "save")} className="secondary">
             Save changes
           </button>
         )}
