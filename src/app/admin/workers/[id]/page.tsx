@@ -21,7 +21,7 @@ export default async function WorkerDetail({ params, searchParams }: Props) {
   const supabase = await createClient();
   const { data: worker } = await supabase
     .from("profiles")
-    .select("id, full_name, role, phone")
+    .select("*")
     .eq("id", id)
     .single();
   if (!worker) notFound();
