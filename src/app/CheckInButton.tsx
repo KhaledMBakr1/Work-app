@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PinIcon } from "@/components/Icons";
 import { checkIn } from "./actions";
 
 export default function CheckInButton() {
@@ -34,10 +35,12 @@ export default function CheckInButton() {
 
   return (
     <div className="stack">
-      <button className="big" onClick={handleClick} disabled={busy}>
+      <button className="checkin-button" onClick={handleClick} disabled={busy}>
+        <PinIcon />
         {busy ? "Getting your location…" : "I've arrived at work"}
       </button>
-      {error && <p className="error">{error}</p>}
+      <p className="muted small center">Your location is saved with your check-in.</p>
+      {error && <p className="alert alert-error">{error}</p>}
     </div>
   );
 }

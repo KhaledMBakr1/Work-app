@@ -1,15 +1,15 @@
 import Link from "next/link";
+import TopBar from "@/components/TopBar";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { firstDayOf, monthLabel, nextMonthStart, recentMonths } from "@/lib/months";
-import { signOut } from "../login/actions";
 import { markMonthPaid } from "./actions";
 import CheckinEditor, { CHECKIN_COLUMNS, type Checkin } from "./CheckinEditor";
 
 type Props = { searchParams: Promise<{ month?: string; error?: string }> };
 
 export default async function AdminHome({ searchParams }: Props) {
-  await requireAdmin();
+  const me = await requireAdmin();
   const months = recentMonths(12);
   const { month: requested, error } = await searchParams;
   const month = requested && months.includes(requested) ? requested : months[0];
@@ -44,78 +44,107 @@ export default async function AdminHome({ searchParams }: Props) {
       return { id: p.id, name: p.full_name || "(no name)", days, unpaid, waiting, places, approved: approved.length };
     });
 
+  const totalDays = overview.reduce((sum, w) => sum + w.days, 0);
+  const unpaidWorkers = overview.filter((w) => w.unpaid > 0).length;
+  const pendingList = (pending ?? []) as Checkin[];
+
   return (
-    <main>
-      <header className="topbar">
-        <h1>Admin</h1>
-        <form action={signOut}>
-          <button className="link">Log out</button>
-        </form>
-      </header>
-      {error && <p className="card error">Could not save: {error}</p>}
+    <>
+      <TopBar name={me.full_name} role={me.role} />
+      <main>
+        {error && <p className="alert alert-error">Could not save: {error}</p>}
 
-      <section className="stack">
-        <h2>Waiting for approval ({pending?.length ?? 0})</h2>
-        {(pending ?? []).length === 0 && <p className="muted">Nothing to approve right now.</p>}
-        {(pending as Checkin[] | null)?.map((c) => (
-          <CheckinEditor key={c.id} checkin={c} workerName={names.get(c.worker_id)} />
-        ))}
-      </section>
+        <div className="stats">
+          <div className="card stat">
+            <p className="stat-label">Waiting for approval</p>
+            <p className="stat-value">{pendingList.length}</p>
+          </div>
+          <div className="card stat">
+            <p className="stat-label">Workers</p>
+            <p className="stat-value">{overview.length}</p>
+          </div>
+          <div className="card stat">
+            <p className="stat-label">Days in {monthLabel(month).split(" ")[0]}</p>
+            <p className="stat-value">{totalDays}</p>
+          </div>
+          <div className="card stat">
+            <p className="stat-label">Workers to pay</p>
+            <p className="stat-value">{unpaidWorkers}</p>
+          </div>
+        </div>
 
-      <section className="card">
-        <div className="row between">
-          <h2>All workers</h2>
-          <form className="row">
-            <select name="month" defaultValue={month}>
-              {months.map((m) => (
-                <option key={m} value={m}>
-                  {monthLabel(m)}
-                </option>
-              ))}
-            </select>
-            <button className="secondary">Show</button>
-          </form>
-        </div>
-        <div className="scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>Worker</th>
-                <th>Days</th>
-                <th>Waiting</th>
-                <th>Where</th>
-                <th>Paid</th>
-              </tr>
-            </thead>
-            <tbody>
-              {overview.map((w) => (
-                <tr key={w.id}>
-                  <td>
-                    <Link href={`/admin/workers/${w.id}?month=${month}`}>{w.name}</Link>
-                  </td>
-                  <td>{w.days}</td>
-                  <td>{w.waiting || ""}</td>
-                  <td>{w.places.join(", ")}</td>
-                  <td>
-                    {w.approved === 0 ? (
-                      "-"
-                    ) : w.unpaid === 0 ? (
-                      "Paid"
-                    ) : (
-                      <form action={markMonthPaid}>
-                        <input type="hidden" name="worker_id" value={w.id} />
-                        <input type="hidden" name="month" value={month} />
-                        <button className="small">Mark paid</button>
-                      </form>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {overview.length === 0 && <p className="muted">No workers have signed up yet.</p>}
-      </section>
-    </main>
+        <section className="stack">
+          <h2>Waiting for approval</h2>
+          {pendingList.length === 0 && (
+            <div className="card empty">All caught up. New check-ins will show up here.</div>
+          )}
+          {pendingList.map((c) => (
+            <CheckinEditor key={c.id} checkin={c} workerName={names.get(c.worker_id)} />
+          ))}
+        </section>
+
+        <section className="card stack">
+          <div className="row between">
+            <h2>All workers</h2>
+            <form className="row">
+              <select name="month" defaultValue={month} aria-label="Month">
+                {months.map((m) => (
+                  <option key={m} value={m}>
+                    {monthLabel(m)}
+                  </option>
+                ))}
+              </select>
+              <button className="secondary">Show</button>
+            </form>
+          </div>
+          {overview.length === 0 ? (
+            <p className="muted">No workers have signed up yet.</p>
+          ) : (
+            <div className="scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Worker</th>
+                    <th className="num">Days</th>
+                    <th>Where</th>
+                    <th>Paid</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {overview.map((w) => (
+                    <tr key={w.id}>
+                      <td>
+                        <Link className="worker-link" href={`/admin/workers/${w.id}?month=${month}`}>
+                          <span className="avatar small" aria-hidden="true">
+                            {w.name.charAt(0).toUpperCase()}
+                          </span>
+                          {w.name}
+                        </Link>
+                        {w.waiting > 0 && <span className="pill pill-warn">{w.waiting} waiting</span>}
+                      </td>
+                      <td className="num strong">{w.days}</td>
+                      <td className="muted">{w.places.join(", ") || "-"}</td>
+                      <td>
+                        {w.approved === 0 ? (
+                          <span className="muted">-</span>
+                        ) : w.unpaid === 0 ? (
+                          <span className="pill pill-ok">Paid</span>
+                        ) : (
+                          <form action={markMonthPaid}>
+                            <input type="hidden" name="worker_id" value={w.id} />
+                            <input type="hidden" name="month" value={month} />
+                            <button className="small">Mark paid</button>
+                          </form>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      </main>
+    </>
   );
 }

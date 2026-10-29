@@ -1,3 +1,4 @@
+import { CheckIcon, PinIcon, XIcon } from "@/components/Icons";
 import { mapLink } from "@/lib/months";
 import { saveCheckin } from "./actions";
 
@@ -30,16 +31,19 @@ export default function CheckinEditor({ checkin, workerName }: Props) {
   });
 
   return (
-    <form action={saveCheckin.bind(null, "save")} className="card stack">
+    <form action={saveCheckin.bind(null, "save")} className={`card checkin stack ${checkin.status}`}>
       <input type="hidden" name="id" value={checkin.id} />
       <div className="row between">
-        <strong>
-          {workerName && `${workerName} · `}
-          {checkin.work_date} at {time}
-        </strong>
-        <span className={`badge ${checkin.status}`}>{checkin.status}</span>
+        <div>
+          <strong className="checkin-title">{workerName ?? checkin.work_date}</strong>
+          <p className="muted small">
+            {workerName && `${checkin.work_date} · `}checked in at {time}
+          </p>
+        </div>
+        <span className={`pill pill-${checkin.status}`}>{checkin.status}</span>
       </div>
-      <p className="muted">
+      <p className="location">
+        <PinIcon />
         {map ? (
           <a href={map} target="_blank" rel="noreferrer">
             See location on map
@@ -47,7 +51,9 @@ export default function CheckinEditor({ checkin, workerName }: Props) {
         ) : (
           "No location"
         )}
-        {checkin.accuracy_m != null && ` (within ${Math.round(checkin.accuracy_m)} m)`}
+        {checkin.accuracy_m != null && (
+          <span className="muted"> · within {Math.round(checkin.accuracy_m)} m</span>
+        )}
       </p>
       <div className="grid">
         <label>
@@ -69,17 +75,17 @@ export default function CheckinEditor({ checkin, workerName }: Props) {
       </div>
       <label>
         Note
-        <textarea name="note" rows={2} defaultValue={checkin.note ?? ""} />
+        <textarea name="note" rows={2} defaultValue={checkin.note ?? ""} placeholder="What was done" />
       </label>
       <div className="row">
         {checkin.status !== "approved" && (
-          <button formAction={saveCheckin.bind(null, "approve")}>
-            Approve
+          <button formAction={saveCheckin.bind(null, "approve")} className="approve">
+            <CheckIcon /> Approve
           </button>
         )}
         {checkin.status !== "rejected" && (
-          <button formAction={saveCheckin.bind(null, "reject")} className="secondary">
-            Reject
+          <button formAction={saveCheckin.bind(null, "reject")} className="danger">
+            <XIcon /> Reject
           </button>
         )}
         {checkin.status !== "pending" && (

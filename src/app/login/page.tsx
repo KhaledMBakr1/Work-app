@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Brand from "@/components/Brand";
 import { signIn, signUp } from "./actions";
 
 type Props = {
@@ -10,27 +11,36 @@ export default async function LoginPage({ searchParams }: Props) {
   const isSignup = mode === "signup";
 
   return (
-    <main className="narrow">
-      <h1>Work days</h1>
-      <form className="card stack" action={isSignup ? signUp : signIn}>
-        <h2>{isSignup ? "Create account" : "Log in"}</h2>
-        {error && <p className="error">{error}</p>}
-        {message && <p className="notice">{message}</p>}
+    <main className="auth">
+      <div className="auth-hero">
+        <Brand />
+        <h1>Every work day, counted.</h1>
+        <p>Check in when you arrive. Your days and pay status, always up to date.</p>
+      </div>
+
+      <form className="card auth-card stack" action={isSignup ? signUp : signIn}>
+        <div>
+          <h2>{isSignup ? "Create your account" : "Welcome back"}</h2>
+          <p className="muted">
+            {isSignup ? "It takes less than a minute." : "Log in to check in for today."}
+          </p>
+        </div>
+        {error && <p className="alert alert-error">{error}</p>}
+        {message && <p className="alert alert-ok">{message}</p>}
         {isSignup && (
           <label>
             Full name
             <input name="full_name" required autoComplete="name" />
           </label>
         )}
-        {isSignup ? (
+        <label>
+          Email
+          <input name="email" type="email" required autoComplete="email" />
+        </label>
+        {isSignup && (
           <label>
-            Phone number
-            <input name="phone" type="tel" inputMode="tel" required autoComplete="tel" />
-          </label>
-        ) : (
-          <label>
-            Phone number
-            <input name="login" type="text" inputMode="tel" required autoComplete="username" />
+            Phone number <span className="muted">(optional)</span>
+            <input name="phone" type="tel" inputMode="tel" autoComplete="tel" />
           </label>
         )}
         <label>
@@ -43,12 +53,18 @@ export default async function LoginPage({ searchParams }: Props) {
             autoComplete={isSignup ? "new-password" : "current-password"}
           />
         </label>
-        <button type="submit">{isSignup ? "Create account" : "Log in"}</button>
-        <p className="muted">
+        <button type="submit" className="primary wide">
+          {isSignup ? "Create account" : "Log in"}
+        </button>
+        <p className="muted center">
           {isSignup ? (
-            <Link href="/login">I already have an account</Link>
+            <>
+              Already have an account? <Link href="/login">Log in</Link>
+            </>
           ) : (
-            <Link href="/login?mode=signup">Create a new account</Link>
+            <>
+              New here? <Link href="/login?mode=signup">Create an account</Link>
+            </>
           )}
         </p>
       </form>

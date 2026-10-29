@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Work days",
+  title: "WorkDays",
   description: "Track the days workers worked each month",
 };
 

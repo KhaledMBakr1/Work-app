@@ -2,8 +2,9 @@ import { redirect } from "next/navigation";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { firstDayOf, monthKey, monthLabel, recentMonths, todayISO } from "@/lib/months";
+import TopBar from "@/components/TopBar";
+import { CheckIcon, ClockIcon, XIcon } from "@/components/Icons";
 import CheckInButton from "./CheckInButton";
-import { signOut } from "./login/actions";
 
 type Row = {
   work_date: string;
@@ -40,53 +41,67 @@ export default async function WorkerHome() {
     return { month, days, pending, paid };
   });
 
+  const todayLabel = new Date().toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+
   return (
-    <main className="narrow">
-      <header className="topbar">
-        <h1>Hi {profile.full_name || "there"}</h1>
-        <form action={signOut}>
-          <button className="link">Log out</button>
-        </form>
-      </header>
+    <>
+      <TopBar name={profile.full_name} role={profile.role} />
+      <main className="narrow">
+        <section className="card today stack">
+          <div>
+            <p className="eyebrow">Today</p>
+            <h1>{todayLabel}</h1>
+          </div>
+          {today ? (
+            <div className={`status-panel ${today.status}`}>
+              {today.status === "pending" && <ClockIcon />}
+              {today.status === "approved" && <CheckIcon />}
+              {today.status === "rejected" && <XIcon />}
+              <div>
+                <strong>
+                  {today.status === "pending" && "Checked in, waiting for approval"}
+                  {today.status === "approved" && "Approved"}
+                  {today.status === "rejected" && "Not approved"}
+                </strong>
+                <p>
+                  {today.status === "pending" && "Your admin will confirm this day soon."}
+                  {today.status === "approved" && "This day is counted in your total."}
+                  {today.status === "rejected" && "Talk to your admin if this is a mistake."}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <CheckInButton />
+          )}
+        </section>
 
-      <section className="card stack">
-        <h2>Today</h2>
-        {today ? (
-          <p>
-            You checked in today.{" "}
-            {today.status === "pending" && "Waiting for the admin to approve."}
-            {today.status === "approved" && "Approved."}
-            {today.status === "rejected" && "The admin did not approve this day."}
-          </p>
-        ) : (
-          <CheckInButton />
-        )}
-      </section>
-
-      <section className="card">
-        <h2>Your days</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Month</th>
-              <th>Days</th>
-              <th>Paid</th>
-            </tr>
-          </thead>
-          <tbody>
-            {summary.map((s) => (
-              <tr key={s.month}>
-                <td>{monthLabel(s.month)}</td>
-                <td>
-                  {s.days}
-                  {s.pending > 0 && <span className="muted"> (+{s.pending} waiting)</span>}
-                </td>
-                <td>{s.paid}</td>
-              </tr>
+        <section className="stack">
+          <h2>Your days</h2>
+          <div className="month-list">
+            {summary.map((s, i) => (
+              <div key={s.month} className={`card month ${i === 0 ? "current" : ""}`}>
+                <div>
+                  <p className="month-name">{monthLabel(s.month)}</p>
+                  {s.pending > 0 && <p className="muted small">{s.pending} waiting for approval</p>}
+                </div>
+                <div className="month-right">
+                  <p className="month-days">
+                    {s.days}
+                    <span>{s.days === 1 ? "day" : "days"}</span>
+                  </p>
+                  {s.paid !== "-" && (
+                    <span className={`pill ${s.paid === "Paid" ? "pill-ok" : "pill-warn"}`}>{s.paid}</span>
+                  )}
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
-      </section>
-    </main>
+          </div>
+        </section>
+      </main>
+    </>
   );
 }

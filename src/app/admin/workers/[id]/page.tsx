@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeftIcon, PhoneIcon } from "@/components/Icons";
+import TopBar from "@/components/TopBar";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { firstDayOf, monthLabel, nextMonthStart, recentMonths } from "@/lib/months";
@@ -38,57 +40,81 @@ export default async function WorkerDetail({ params, searchParams }: Props) {
     .filter((c) => c.status === "approved")
     .reduce((sum, c) => sum + Number(c.multiplier), 0);
 
+  const name = worker.full_name || "(no name)";
+
   return (
-    <main>
-      <p>
-        <Link href={`/admin?month=${month}`}>← All workers</Link>
-      </p>
-      <header className="topbar">
-        <div>
-          <h1>{worker.full_name || "(no name)"}</h1>
-          {worker.phone && <a href={`tel:${worker.phone}`}>{worker.phone}</a>}
-        </div>
-        {worker.id !== me.id && (
-          <form action={setRole}>
-            <input type="hidden" name="id" value={worker.id} />
-            <input type="hidden" name="role" value={worker.role === "admin" ? "worker" : "admin"} />
-            <button className="link">{worker.role === "admin" ? "Remove admin" : "Make admin"}</button>
-          </form>
-        )}
-      </header>
-      {error && <p className="card error">Could not save: {error}</p>}
+    <>
+      <TopBar name={me.full_name} role={me.role} />
+      <main>
+        <Link className="back-link" href={`/admin?month=${month}`}>
+          <ArrowLeftIcon /> All workers
+        </Link>
 
-      <form className="row">
-        <select name="month" defaultValue={month}>
-          {months.map((m) => (
-            <option key={m} value={m}>
-              {monthLabel(m)}
-            </option>
-          ))}
-        </select>
-        <button className="secondary">Show</button>
-      </form>
-
-      <p>
-        <strong>{days}</strong> approved days in {monthLabel(month)}.
-      </p>
-
-      <section className="stack">
-        {checkins.length === 0 && <p className="muted">No check-ins this month.</p>}
-        {checkins.map((c) => (
-          <div key={c.id} className="stack">
-            <CheckinEditor checkin={c} />
-            {c.status === "approved" && (
-              <form action={setPaid} className="row">
-                <input type="hidden" name="id" value={c.id} />
-                <input type="hidden" name="paid" value={String(!c.paid)} />
-                <span>{c.paid ? "Paid" : "Not paid"}</span>
-                <button className="small secondary">{c.paid ? "Mark unpaid" : "Mark paid"}</button>
-              </form>
-            )}
+        <section className="card profile">
+          <span className="avatar large" aria-hidden="true">
+            {name.charAt(0).toUpperCase()}
+          </span>
+          <div className="profile-info">
+            <h1>{name}</h1>
+            <p className="muted">
+              {worker.role === "admin" ? "Admin" : "Worker"}
+              {worker.phone && (
+                <>
+                  {" · "}
+                  <a href={`tel:${worker.phone}`}>
+                    <PhoneIcon /> {worker.phone}
+                  </a>
+                </>
+              )}
+            </p>
           </div>
-        ))}
-      </section>
-    </main>
+          <div className="profile-days">
+            <p className="stat-value">{days}</p>
+            <p className="stat-label">days in {monthLabel(month)}</p>
+          </div>
+        </section>
+
+        {error && <p className="alert alert-error">Could not save: {error}</p>}
+
+        <div className="row between">
+          <form className="row">
+            <select name="month" defaultValue={month} aria-label="Month">
+              {months.map((m) => (
+                <option key={m} value={m}>
+                  {monthLabel(m)}
+                </option>
+              ))}
+            </select>
+            <button className="secondary">Show</button>
+          </form>
+          {worker.id !== me.id && (
+            <form action={setRole}>
+              <input type="hidden" name="id" value={worker.id} />
+              <input type="hidden" name="role" value={worker.role === "admin" ? "worker" : "admin"} />
+              <button className="link">{worker.role === "admin" ? "Remove admin" : "Make admin"}</button>
+            </form>
+          )}
+        </div>
+
+        <section className="stack">
+          {checkins.length === 0 && <div className="card empty">No check-ins this month.</div>}
+          {checkins.map((c) => (
+            <div key={c.id} className="checkin-group">
+              <CheckinEditor checkin={c} />
+              {c.status === "approved" && (
+                <form action={setPaid} className="paid-bar">
+                  <input type="hidden" name="id" value={c.id} />
+                  <input type="hidden" name="paid" value={String(!c.paid)} />
+                  <span className={`pill ${c.paid ? "pill-ok" : "pill-warn"}`}>
+                    {c.paid ? "Paid" : "Not paid"}
+                  </span>
+                  <button className="small secondary">{c.paid ? "Mark unpaid" : "Mark paid"}</button>
+                </form>
+              )}
+            </div>
+          ))}
+        </section>
+      </main>
+    </>
   );
 }

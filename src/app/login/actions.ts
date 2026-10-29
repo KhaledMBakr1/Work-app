@@ -2,39 +2,37 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { loginEmail, normalizePhone } from "@/lib/phone";
 import { createClient } from "@/lib/supabase/server";
 
 export async function signIn(formData: FormData) {
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({
-    email: loginEmail(String(formData.get("login"))),
+    email: String(formData.get("email")).trim(),
     password: String(formData.get("password")),
   });
-  if (error) redirect(`/login?error=${encodeURIComponent("Wrong phone number or password.")}`);
+  if (error) redirect(`/login?error=${encodeURIComponent("Wrong email or password.")}`);
   redirect("/");
 }
 
 export async function signUp(formData: FormData) {
   const supabase = await createClient();
   const origin = (await headers()).get("origin") ?? "";
-  const phone = normalizePhone(String(formData.get("phone")));
-  if (phone.length < 7) redirect("/login?mode=signup&error=Please enter a valid phone number.");
+  const phone = String(formData.get("phone") ?? "").trim() || null;
   const { data, error } = await supabase.auth.signUp({
-    email: loginEmail(phone),
+    email: String(formData.get("email")).trim(),
     password: String(formData.get("password")),
     options: {
-      data: { full_name: String(formData.get("full_name")), phone },
+      data: { full_name: String(formData.get("full_name")).trim(), phone },
       emailRedirectTo: `${origin}/auth/callback`,
     },
   });
   if (error) {
     const message = /already registered/i.test(error.message)
-      ? "This phone number already has an account. Please log in."
+      ? "This email already has an account. Please log in."
       : error.message;
     redirect(`/login?mode=signup&error=${encodeURIComponent(message)}`);
   }
-  if (!data.session) redirect("/login?message=Account created. Please log in.");
+  if (!data.session) redirect("/login?message=Check your email to confirm your account, then log in.");
   redirect("/");
 }
 
