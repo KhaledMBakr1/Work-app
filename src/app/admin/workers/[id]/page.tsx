@@ -21,7 +21,7 @@ export default async function WorkerDetail({ params, searchParams }: Props) {
   const supabase = await createClient();
   const { data: worker } = await supabase
     .from("profiles")
-    .select("id, full_name, role")
+    .select("id, full_name, role, phone")
     .eq("id", id)
     .single();
   if (!worker) notFound();
@@ -44,7 +44,10 @@ export default async function WorkerDetail({ params, searchParams }: Props) {
         <Link href={`/admin?month=${month}`}>← All workers</Link>
       </p>
       <header className="topbar">
-        <h1>{worker.full_name || "(no name)"}</h1>
+        <div>
+          <h1>{worker.full_name || "(no name)"}</h1>
+          {worker.phone && <a href={`tel:${worker.phone}`}>{worker.phone}</a>}
+        </div>
         {worker.id !== me.id && (
           <form action={setRole}>
             <input type="hidden" name="id" value={worker.id} />

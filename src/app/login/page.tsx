@@ -22,10 +22,17 @@ export default async function LoginPage({ searchParams }: Props) {
             <input name="full_name" required autoComplete="name" />
           </label>
         )}
-        <label>
-          Email
-          <input name="email" type="email" required autoComplete="email" />
-        </label>
+        {isSignup ? (
+          <label>
+            Phone number
+            <input name="phone" type="tel" inputMode="tel" required autoComplete="tel" />
+          </label>
+        ) : (
+          <label>
+            Phone number
+            <input name="login" type="text" inputMode="tel" required autoComplete="username" />
+          </label>
+        )}
         <label>
           Password
           <input

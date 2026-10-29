@@ -17,9 +17,10 @@ Built with Next.js and Supabase (login and database).
    npm install
    npm run dev
    ```
-5. Open http://localhost:3000, create your own account, then make yourself the admin by running this in the SQL Editor:
+5. Also run `supabase/migrations/0002_phone.sql` in the SQL Editor, and turn off **Authentication > Sign In / Providers > Email > Confirm email** (workers sign up with a phone number, so there is no email to confirm).
+6. Open http://localhost:3000, create your own account, then make yourself the admin by running this in the SQL Editor:
    ```sql
-   update profiles set role = 'admin' where id = (select id from auth.users where email = 'you@example.com');
+   update profiles set role = 'admin' where id = (select id from auth.users where email = 'you@example.com' or email = '0501234567@phone.work-app.invalid');
    ```
    After that, you can make other people admins from their page in the app.
 
