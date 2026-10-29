@@ -1,17 +1,20 @@
 import { redirect } from "next/navigation";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { firstDayOf, monthKey, monthLabel, recentMonths, todayISO } from "@/lib/months";
+import { firstDayOf, monthKey, monthLabel, recentMonths } from "@/lib/months";
+import { formatDuration, formatTime, localToday } from "@/lib/time";
 import TopBar from "@/components/TopBar";
 import { CheckIcon, ClockIcon, XIcon } from "@/components/Icons";
 import { fill, getI18n, TIME_ZONE } from "@/lib/i18n";
-import CheckInButton from "./CheckInButton";
+import LocationButton from "./LocationButton";
 
 type Row = {
   work_date: string;
   status: "pending" | "approved" | "rejected";
   multiplier: number;
   paid: boolean;
+  checked_in_at: string;
+  checked_out_at: string | null;
 };
 
 export default async function WorkerHome() {
@@ -23,12 +26,12 @@ export default async function WorkerHome() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("checkins")
-    .select("work_date, status, multiplier, paid")
+    .select("work_date, status, multiplier, paid, checked_in_at, checked_out_at")
     .eq("worker_id", profile.id)
     .gte("work_date", firstDayOf(months[months.length - 1]));
   const rows = (data ?? []) as Row[];
 
-  const today = rows.find((r) => r.work_date === todayISO());
+  const today = rows.find((r) => r.work_date === localToday());
 
   const summary = months.map((month) => {
     const inMonth = rows.filter((r) => monthKey(r.work_date) === month);
@@ -43,6 +46,13 @@ export default async function WorkerHome() {
     return { month, days, pending, paid };
   });
 
+  const locationText = {
+    gettingLocation: t.gettingLocation,
+    noGeolocation: t.noGeolocation,
+    allowLocation: t.allowLocation,
+    errors: { alreadyCheckedIn: t.alreadyCheckedIn, noOpenCheckin: t.noOpenCheckin },
+  };
+
   const todayLabel = new Date().toLocaleDateString(locale, {
     weekday: "long",
     day: "numeric",
@@ -52,7 +62,7 @@ export default async function WorkerHome() {
 
   return (
     <>
-      <TopBar name={profile.full_name} role={profile.role} />
+      <TopBar name={profile.full_name} role={profile.role} business={profile.business_name} />
       <main className="narrow">
         <section className="card today stack">
           <div>
@@ -60,6 +70,7 @@ export default async function WorkerHome() {
             <h1>{todayLabel}</h1>
           </div>
           {today ? (
+            <>
             <div className={`status-panel ${today.status}`}>
               {today.status === "pending" && <ClockIcon />}
               {today.status === "approved" && <CheckIcon />}
@@ -77,17 +88,30 @@ export default async function WorkerHome() {
                 </p>
               </div>
             </div>
+            <div className="times">
+              <div>
+                <span className="muted small">{t.inLabel}</span>
+                <strong>{formatTime(today.checked_in_at, locale)}</strong>
+              </div>
+              <div>
+                <span className="muted small">{t.outLabel}</span>
+                <strong>{today.checked_out_at ? formatTime(today.checked_out_at, locale) : t.notYet}</strong>
+              </div>
+              <div>
+                <span className="muted small">{t.hoursLabel}</span>
+                <strong>
+                  {today.checked_out_at
+                    ? formatDuration(today.checked_in_at, today.checked_out_at, t.hoursFormat)
+                    : t.notYet}
+                </strong>
+              </div>
+            </div>
+            {!today.checked_out_at && (
+              <LocationButton kind="out" text={{ ...locationText, label: t.leaving, hint: t.leavingHint }} />
+            )}
+            </>
           ) : (
-            <CheckInButton
-              text={{
-                noGeolocation: t.noGeolocation,
-                allowLocation: t.allowLocation,
-                gettingLocation: t.gettingLocation,
-                arrived: t.arrived,
-                locationSaved: t.locationSaved,
-                alreadyCheckedIn: t.alreadyCheckedIn,
-              }}
-            />
+            <LocationButton kind="in" text={{ ...locationText, label: t.arrived, hint: t.locationSaved }} />
           )}
         </section>
 

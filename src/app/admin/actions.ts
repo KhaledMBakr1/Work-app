@@ -92,3 +92,23 @@ export async function setRole(formData: FormData) {
     await supabase.from("profiles").update({ role }).eq("id", String(formData.get("id"))).select("id"),
   );
 }
+
+export async function regenerateInvite() {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("regenerate_invite_code");
+  await finish({ error });
+}
+
+export async function removeFromBusiness(formData: FormData) {
+  await requireAdmin();
+  const supabase = await createClient();
+  await finish(
+    await supabase
+      .from("profiles")
+      .update({ business_id: null, role: "worker" })
+      .eq("id", String(formData.get("id")))
+      .select("id"),
+  );
+  redirect("/admin");
+}

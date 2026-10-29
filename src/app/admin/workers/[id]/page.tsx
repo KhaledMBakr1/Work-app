@@ -6,7 +6,7 @@ import { requireAdmin } from "@/lib/auth";
 import { fill, getI18n, type Dict } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import { firstDayOf, monthLabel, nextMonthStart, recentMonths } from "@/lib/months";
-import { setPaid, setRole } from "../../actions";
+import { removeFromBusiness, setPaid, setRole } from "../../actions";
 import CheckinEditor, { CHECKIN_COLUMNS, type Checkin } from "../../CheckinEditor";
 
 type Props = {
@@ -46,7 +46,7 @@ export default async function WorkerDetail({ params, searchParams }: Props) {
 
   return (
     <>
-      <TopBar name={me.full_name} role={me.role} />
+      <TopBar name={me.full_name} role={me.role} business={me.business_name} />
       <main>
         <Link className="back-link" href={`/admin?month=${month}`}>
           <ArrowLeftIcon className="flip-rtl" /> {t.allWorkers}
@@ -94,11 +94,17 @@ export default async function WorkerDetail({ params, searchParams }: Props) {
             <button className="secondary">{t.show}</button>
           </form>
           {worker.id !== me.id && (
-            <form action={setRole}>
-              <input type="hidden" name="id" value={worker.id} />
-              <input type="hidden" name="role" value={worker.role === "admin" ? "worker" : "admin"} />
-              <button className="link">{worker.role === "admin" ? t.removeAdmin : t.makeAdmin}</button>
-            </form>
+            <div className="row">
+              <form action={setRole}>
+                <input type="hidden" name="id" value={worker.id} />
+                <input type="hidden" name="role" value={worker.role === "admin" ? "worker" : "admin"} />
+                <button className="link">{worker.role === "admin" ? t.removeAdmin : t.makeAdmin}</button>
+              </form>
+              <form action={removeFromBusiness}>
+                <input type="hidden" name="id" value={worker.id} />
+                <button className="link danger-link">{t.removeFromBusiness}</button>
+              </form>
+            </div>
           )}
         </div>
 

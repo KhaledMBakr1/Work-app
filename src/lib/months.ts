@@ -27,10 +27,6 @@ export function monthLabel(month: MonthKey, locale: string, withYear = true): st
   });
 }
 
-export function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
 export function nextMonthStart(month: MonthKey): string {
   const [y, m] = month.split("-").map(Number);
   return new Date(Date.UTC(y, m, 1)).toISOString().slice(0, 10);

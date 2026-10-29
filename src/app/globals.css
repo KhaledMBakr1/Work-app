@@ -784,3 +784,99 @@ tbody tr:last-child td {
 [dir="rtl"] th {
   letter-spacing: 0;
 }
+
+/* Check-out */
+
+.times {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  text-align: center;
+}
+
+.times > div {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 6px;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.times strong {
+  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.checkin-button.checkout {
+  background: var(--surface);
+  color: var(--brand);
+  border: 2px solid var(--brand);
+  box-shadow: none;
+}
+
+.checkin-button.checkout:hover {
+  background: var(--brand-soft);
+}
+
+/* Invites */
+
+.invite summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.invite summary::-webkit-details-marker {
+  display: none;
+}
+
+.invite summary::after {
+  content: "+";
+  font-size: 1.4rem;
+  color: var(--muted);
+}
+
+.invite[open] summary::after {
+  content: "−";
+}
+
+.invite[open] summary {
+  margin-bottom: 14px;
+}
+
+.invite-link {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px dashed var(--border);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+
+a.button {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+a.whatsapp {
+  background: #25d366;
+  color: #06331a;
+}
+
+.grow {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+}
+
+button.danger-link {
+  color: var(--danger);
+}

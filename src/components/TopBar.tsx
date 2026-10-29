@@ -4,9 +4,9 @@ import Brand from "./Brand";
 import { LogoutIcon } from "./Icons";
 import LanguageSwitcher from "./LanguageSwitcher";
 
-type Props = { name: string; role: "worker" | "admin" };
+type Props = { name: string; role: "worker" | "admin"; business?: string | null };
 
-export default async function TopBar({ name, role }: Props) {
+export default async function TopBar({ name, role, business }: Props) {
   const { lang, t } = await getI18n();
   return (
     <header className="topbar">
@@ -19,7 +19,10 @@ export default async function TopBar({ name, role }: Props) {
           </span>
           <span className="topbar-name">
             {name || t.account}
-            <small>{role === "admin" ? t.admin : t.worker}</small>
+            <small>
+              {role === "admin" ? t.admin : t.worker}
+              {business && ` · ${business}`}
+            </small>
           </span>
           <form action={signOut}>
             <button className="icon-button flip-rtl" aria-label={t.logOut} title={t.logOut}>
