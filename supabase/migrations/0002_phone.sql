@@ -1,6 +1,6 @@
 -- Workers sign up with a phone number; keep it on their profile so admins can see it.
 
-alter table public.profiles add column phone text;
+alter table public.profiles add column if not exists phone text;
 
 create or replace function public.handle_new_user()
 returns trigger
