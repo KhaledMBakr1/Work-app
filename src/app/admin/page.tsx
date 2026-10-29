@@ -6,12 +6,12 @@ import { signOut } from "../login/actions";
 import { markMonthPaid } from "./actions";
 import CheckinEditor, { CHECKIN_COLUMNS, type Checkin } from "./CheckinEditor";
 
-type Props = { searchParams: Promise<{ month?: string }> };
+type Props = { searchParams: Promise<{ month?: string; error?: string }> };
 
 export default async function AdminHome({ searchParams }: Props) {
   await requireAdmin();
   const months = recentMonths(12);
-  const { month: requested } = await searchParams;
+  const { month: requested, error } = await searchParams;
   const month = requested && months.includes(requested) ? requested : months[0];
 
   const supabase = await createClient();
@@ -52,6 +52,7 @@ export default async function AdminHome({ searchParams }: Props) {
           <button className="link">Log out</button>
         </form>
       </header>
+      {error && <p className="card error">Could not save: {error}</p>}
 
       <section className="stack">
         <h2>Waiting for approval ({pending?.length ?? 0})</h2>

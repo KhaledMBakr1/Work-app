@@ -8,14 +8,14 @@ import CheckinEditor, { CHECKIN_COLUMNS, type Checkin } from "../../CheckinEdito
 
 type Props = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ month?: string }>;
+  searchParams: Promise<{ month?: string; error?: string }>;
 };
 
 export default async function WorkerDetail({ params, searchParams }: Props) {
   const me = await requireAdmin();
   const { id } = await params;
   const months = recentMonths(12);
-  const { month: requested } = await searchParams;
+  const { month: requested, error } = await searchParams;
   const month = requested && months.includes(requested) ? requested : months[0];
 
   const supabase = await createClient();
@@ -53,6 +53,7 @@ export default async function WorkerDetail({ params, searchParams }: Props) {
           </form>
         )}
       </header>
+      {error && <p className="card error">Could not save: {error}</p>}
 
       <form className="row">
         <select name="month" defaultValue={month}>
