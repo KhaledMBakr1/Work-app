@@ -1,5 +1,7 @@
 import Link from "next/link";
 import Brand from "@/components/Brand";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { getI18n, type Dict } from "@/lib/i18n";
 import { signIn, signUp } from "./actions";
 
 type Props = {
@@ -9,42 +11,47 @@ type Props = {
 export default async function LoginPage({ searchParams }: Props) {
   const { mode, error, message } = await searchParams;
   const isSignup = mode === "signup";
+  const { lang, t } = await getI18n();
+  const text = (key?: string) => (key && key in t ? t[key as keyof Dict] : key);
 
   return (
     <main className="auth">
       <div className="auth-hero">
-        <Brand />
-        <h1>Every work day, counted.</h1>
-        <p>Check in when you arrive. Your days and pay status, always up to date.</p>
+        <div className="row between">
+          <Brand />
+          <LanguageSwitcher current={lang} label={t.language} />
+        </div>
+        <h1>{t.appTagline}</h1>
+        <p>{t.appSubtitle}</p>
       </div>
 
       <form className="card auth-card stack" action={isSignup ? signUp : signIn}>
         <div>
-          <h2>{isSignup ? "Create your account" : "Welcome back"}</h2>
+          <h2>{isSignup ? t.createAccountTitle : t.welcomeBack}</h2>
           <p className="muted">
-            {isSignup ? "It takes less than a minute." : "Log in to check in for today."}
+            {isSignup ? t.signupHint : t.loginHint}
           </p>
         </div>
-        {error && <p className="alert alert-error">{error}</p>}
-        {message && <p className="alert alert-ok">{message}</p>}
+        {error && <p className="alert alert-error">{text(error)}</p>}
+        {message && <p className="alert alert-ok">{text(message)}</p>}
         {isSignup && (
           <label>
-            Full name
+            {t.fullName}
             <input name="full_name" required autoComplete="name" />
           </label>
         )}
         <label>
-          Email
+          {t.email}
           <input name="email" type="email" required autoComplete="email" />
         </label>
         {isSignup && (
           <label>
-            Phone number <span className="muted">(optional)</span>
+            {t.phone} <span className="muted">{t.optional}</span>
             <input name="phone" type="tel" inputMode="tel" autoComplete="tel" />
           </label>
         )}
         <label>
-          Password
+          {t.password}
           <input
             name="password"
             type="password"
@@ -54,16 +61,16 @@ export default async function LoginPage({ searchParams }: Props) {
           />
         </label>
         <button type="submit" className="primary wide">
-          {isSignup ? "Create account" : "Log in"}
+          {isSignup ? t.createAccount : t.logIn}
         </button>
         <p className="muted center">
           {isSignup ? (
             <>
-              Already have an account? <Link href="/login">Log in</Link>
+              {t.haveAccount} <Link href="/login">{t.logIn}</Link>
             </>
           ) : (
             <>
-              New here? <Link href="/login?mode=signup">Create an account</Link>
+              {t.newHere} <Link href="/login?mode=signup">{t.createAnAccount}</Link>
             </>
           )}
         </p>

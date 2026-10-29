@@ -1,6 +1,7 @@
 import Link from "next/link";
 import TopBar from "@/components/TopBar";
 import { requireAdmin } from "@/lib/auth";
+import { fill, getI18n, type Dict } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import { firstDayOf, monthLabel, nextMonthStart, recentMonths } from "@/lib/months";
 import { markMonthPaid } from "./actions";
@@ -10,6 +11,7 @@ type Props = { searchParams: Promise<{ month?: string; error?: string }> };
 
 export default async function AdminHome({ searchParams }: Props) {
   const me = await requireAdmin();
+  const { t, locale } = await getI18n();
   const months = recentMonths(12);
   const { month: requested, error } = await searchParams;
   const month = requested && months.includes(requested) ? requested : months[0];
@@ -29,7 +31,7 @@ export default async function AdminHome({ searchParams }: Props) {
       .lt("work_date", nextMonthStart(month)),
   ]);
 
-  const names = new Map((profiles ?? []).map((p) => [p.id, p.full_name || "(no name)"]));
+  const names = new Map((profiles ?? []).map((p) => [p.id, p.full_name || t.noName]));
   const rows = monthRows ?? [];
 
   const overview = (profiles ?? [])
@@ -41,7 +43,7 @@ export default async function AdminHome({ searchParams }: Props) {
       const unpaid = approved.filter((r) => !r.paid).length;
       const waiting = mine.filter((r) => r.status === "pending").length;
       const places = [...new Set(approved.map((r) => r.place).filter(Boolean))];
-      return { id: p.id, name: p.full_name || "(no name)", days, unpaid, waiting, places, approved: approved.length };
+      return { id: p.id, name: p.full_name || t.noName, days, unpaid, waiting, places, approved: approved.length };
     });
 
   const totalDays = overview.reduce((sum, w) => sum + w.days, 0);
@@ -52,62 +54,66 @@ export default async function AdminHome({ searchParams }: Props) {
     <>
       <TopBar name={me.full_name} role={me.role} />
       <main>
-        {error && <p className="alert alert-error">Could not save: {error}</p>}
+        {error && (
+          <p className="alert alert-error">
+            {t.couldNotSave} {error in t ? t[error as keyof Dict] : error}
+          </p>
+        )}
 
         <div className="stats">
           <div className="card stat">
-            <p className="stat-label">Waiting for approval</p>
+            <p className="stat-label">{t.waitingForApproval}</p>
             <p className="stat-value">{pendingList.length}</p>
           </div>
           <div className="card stat">
-            <p className="stat-label">Workers</p>
+            <p className="stat-label">{t.workers}</p>
             <p className="stat-value">{overview.length}</p>
           </div>
           <div className="card stat">
-            <p className="stat-label">Days in {monthLabel(month).split(" ")[0]}</p>
+            <p className="stat-label">{fill(t.daysIn, { month: monthLabel(month, locale, false) })}</p>
             <p className="stat-value">{totalDays}</p>
           </div>
           <div className="card stat">
-            <p className="stat-label">Workers to pay</p>
+            <p className="stat-label">{t.workersToPay}</p>
             <p className="stat-value">{unpaidWorkers}</p>
           </div>
         </div>
 
         <section className="stack">
-          <h2>Waiting for approval</h2>
+          <h2>{t.waitingForApproval}</h2>
           {pendingList.length === 0 && (
-            <div className="card empty">All caught up. New check-ins will show up here.</div>
+            <div className="card empty">{t.allCaughtUp}</div>
           )}
           {pendingList.map((c) => (
-            <CheckinEditor key={c.id} checkin={c} workerName={names.get(c.worker_id)} />
+            <CheckinEditor key={c.id} checkin={c} workerName={names.get(c.worker_id)} t={t} locale={locale} />
           ))}
         </section>
 
         <section className="card stack">
           <div className="row between">
-            <h2>All workers</h2>
+            <h2>{t.allWorkers}</h2>
             <form className="row">
-              <select name="month" defaultValue={month} aria-label="Month">
+              <select name="month" defaultValue={month} aria-label={t.month}>
                 {months.map((m) => (
                   <option key={m} value={m}>
-                    {monthLabel(m)}
+                    {monthLabel(m, locale)}
                   </option>
                 ))}
               </select>
-              <button className="secondary">Show</button>
+              <button className="secondary">{t.show}</button>
             </form>
           </div>
           {overview.length === 0 ? (
-            <p className="muted">No workers have signed up yet.</p>
+            <p className="muted">{t.noWorkers}</p>
           ) : (
             <div className="scroll">
               <table>
                 <thead>
                   <tr>
-                    <th>Worker</th>
-                    <th className="num">Days</th>
-                    <th>Where</th>
-                    <th>Paid</th>
+                    <th>{t.worker}</th>
+                    <th className="num">{t.days}</th>
+                    <th>{t.where}</th>
+                    <th>{t.paid}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -120,7 +126,7 @@ export default async function AdminHome({ searchParams }: Props) {
                           </span>
                           {w.name}
                         </Link>
-                        {w.waiting > 0 && <span className="pill pill-warn">{w.waiting} waiting</span>}
+                        {w.waiting > 0 && <span className="pill pill-warn">{fill(t.waitingCount, { n: w.waiting })}</span>}
                       </td>
                       <td className="num strong">{w.days}</td>
                       <td className="muted">{w.places.join(", ") || "-"}</td>
@@ -128,12 +134,12 @@ export default async function AdminHome({ searchParams }: Props) {
                         {w.approved === 0 ? (
                           <span className="muted">-</span>
                         ) : w.unpaid === 0 ? (
-                          <span className="pill pill-ok">Paid</span>
+                          <span className="pill pill-ok">{t.paid}</span>
                         ) : (
                           <form action={markMonthPaid}>
                             <input type="hidden" name="worker_id" value={w.id} />
                             <input type="hidden" name="month" value={month} />
-                            <button className="small">Mark paid</button>
+                            <button className="small">{t.markPaid}</button>
                           </form>
                         )}
                       </td>

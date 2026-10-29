@@ -10,7 +10,7 @@ export async function signIn(formData: FormData) {
     email: String(formData.get("email")).trim(),
     password: String(formData.get("password")),
   });
-  if (error) redirect(`/login?error=${encodeURIComponent("Wrong email or password.")}`);
+  if (error) redirect("/login?error=wrongLogin");
   redirect("/");
 }
 
@@ -27,12 +27,10 @@ export async function signUp(formData: FormData) {
     },
   });
   if (error) {
-    const message = /already registered/i.test(error.message)
-      ? "This email already has an account. Please log in."
-      : error.message;
+    const message = /already registered/i.test(error.message) ? "emailTaken" : error.message;
     redirect(`/login?mode=signup&error=${encodeURIComponent(message)}`);
   }
-  if (!data.session) redirect("/login?message=Check your email to confirm your account, then log in.");
+  if (!data.session) redirect("/login?message=checkEmail");
   redirect("/");
 }
 

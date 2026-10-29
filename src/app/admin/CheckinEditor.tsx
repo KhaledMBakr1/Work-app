@@ -1,4 +1,5 @@
 import { CheckIcon, PinIcon, XIcon } from "@/components/Icons";
+import { fill, TIME_ZONE, type Dict } from "@/lib/i18n";
 import { mapLink } from "@/lib/months";
 import { saveCheckin } from "./actions";
 
@@ -21,13 +22,14 @@ export type Checkin = {
 export const CHECKIN_COLUMNS =
   "id, worker_id, work_date, checked_in_at, latitude, longitude, accuracy_m, status, multiplier, note, place, client, paid";
 
-type Props = { checkin: Checkin; workerName?: string };
+type Props = { checkin: Checkin; workerName?: string; t: Dict; locale: string };
 
-export default function CheckinEditor({ checkin, workerName }: Props) {
+export default function CheckinEditor({ checkin, workerName, t, locale }: Props) {
   const map = mapLink(checkin.latitude, checkin.longitude);
-  const time = new Date(checkin.checked_in_at).toLocaleTimeString("en-GB", {
+  const time = new Date(checkin.checked_in_at).toLocaleTimeString(locale, {
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: TIME_ZONE,
   });
 
   return (
@@ -37,60 +39,61 @@ export default function CheckinEditor({ checkin, workerName }: Props) {
         <div>
           <strong className="checkin-title">{workerName ?? checkin.work_date}</strong>
           <p className="muted small">
-            {workerName && `${checkin.work_date} · `}checked in at {time}
+            {workerName && `${checkin.work_date} · `}
+            {fill(t.checkedInAt, { time })}
           </p>
         </div>
-        <span className={`pill pill-${checkin.status}`}>{checkin.status}</span>
+        <span className={`pill pill-${checkin.status}`}>{t[`status_${checkin.status}`]}</span>
       </div>
       <p className="location">
         <PinIcon />
         {map ? (
           <a href={map} target="_blank" rel="noreferrer">
-            See location on map
+            {t.seeOnMap}
           </a>
         ) : (
-          "No location"
+          t.noLocation
         )}
         {checkin.accuracy_m != null && (
-          <span className="muted"> · within {Math.round(checkin.accuracy_m)} m</span>
+          <span className="muted"> · {fill(t.withinMeters, { n: Math.round(checkin.accuracy_m) })}</span>
         )}
       </p>
       <div className="grid">
         <label>
-          Counts as
+          {t.countsAs}
           <select name="multiplier" defaultValue={String(Number(checkin.multiplier))}>
-            <option value="1">1 day</option>
-            <option value="1.5">1.5 days</option>
-            <option value="2">2 days</option>
+            <option value="1">{t.oneDay}</option>
+            <option value="1.5">{t.oneHalfDays}</option>
+            <option value="2">{t.twoDays}</option>
           </select>
         </label>
         <label>
-          Where
-          <input name="place" defaultValue={checkin.place ?? ""} placeholder="Site or address" />
+          {t.where}
+          <input name="place" defaultValue={checkin.place ?? ""} placeholder={t.sitePlaceholder} />
         </label>
         <label>
-          For whom
-          <input name="client" defaultValue={checkin.client ?? ""} placeholder="Client" />
+          {t.forWhom}
+          <input name="client" defaultValue={checkin.client ?? ""} placeholder={t.clientPlaceholder} />
         </label>
       </div>
       <label>
-        Note
-        <textarea name="note" rows={2} defaultValue={checkin.note ?? ""} placeholder="What was done" />
+        {t.note}
+        <textarea name="note" rows={2} defaultValue={checkin.note ?? ""} placeholder={t.notePlaceholder} />
       </label>
       <div className="row">
         {checkin.status !== "approved" && (
           <button formAction={saveCheckin.bind(null, "approve")} className="approve">
-            <CheckIcon /> Approve
+            <CheckIcon /> {t.approve}
           </button>
         )}
         {checkin.status !== "rejected" && (
           <button formAction={saveCheckin.bind(null, "reject")} className="danger">
-            <XIcon /> Reject
+            <XIcon /> {t.reject}
           </button>
         )}
         {checkin.status !== "pending" && (
           <button formAction={saveCheckin.bind(null, "save")} className="secondary">
-            Save changes
+            {t.saveChanges}
           </button>
         )}
       </div>

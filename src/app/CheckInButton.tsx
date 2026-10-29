@@ -4,14 +4,23 @@ import { useState } from "react";
 import { PinIcon } from "@/components/Icons";
 import { checkIn } from "./actions";
 
-export default function CheckInButton() {
+type Text = {
+  noGeolocation: string;
+  allowLocation: string;
+  gettingLocation: string;
+  arrived: string;
+  locationSaved: string;
+  alreadyCheckedIn: string;
+};
+
+export default function CheckInButton({ text }: { text: Text }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function handleClick() {
     setError(null);
     if (!navigator.geolocation) {
-      setError("This phone or browser can't share its location.");
+      setError(text.noGeolocation);
       return;
     }
     setBusy(true);
@@ -22,11 +31,11 @@ export default function CheckInButton() {
           longitude: coords.longitude,
           accuracy: coords.accuracy,
         });
-        if (!result.ok) setError(result.error);
+        if (!result.ok) setError(result.error === "alreadyCheckedIn" ? text.alreadyCheckedIn : result.error);
         setBusy(false);
       },
       () => {
-        setError("Please allow location access so your workplace can be recorded.");
+        setError(text.allowLocation);
         setBusy(false);
       },
       { enableHighAccuracy: true, timeout: 20000 },
@@ -37,9 +46,9 @@ export default function CheckInButton() {
     <div className="stack">
       <button className="checkin-button" onClick={handleClick} disabled={busy}>
         <PinIcon />
-        {busy ? "Getting your location…" : "I've arrived at work"}
+        {busy ? text.gettingLocation : text.arrived}
       </button>
-      <p className="muted small center">Your location is saved with your check-in.</p>
+      <p className="muted small center">{text.locationSaved}</p>
       {error && <p className="alert alert-error">{error}</p>}
     </div>
   );

@@ -18,11 +18,11 @@ export function firstDayOf(month: MonthKey): string {
   return `${month}-01`;
 }
 
-export function monthLabel(month: MonthKey): string {
+export function monthLabel(month: MonthKey, locale: string, withYear = true): string {
   const [y, m] = month.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString("en-GB", {
+  return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString(locale, {
     month: "long",
-    year: "numeric",
+    ...(withYear ? { year: "numeric" } : {}),
     timeZone: "UTC",
   });
 }

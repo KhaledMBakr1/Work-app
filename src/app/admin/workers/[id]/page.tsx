@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeftIcon, PhoneIcon } from "@/components/Icons";
 import TopBar from "@/components/TopBar";
 import { requireAdmin } from "@/lib/auth";
+import { fill, getI18n, type Dict } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import { firstDayOf, monthLabel, nextMonthStart, recentMonths } from "@/lib/months";
 import { setPaid, setRole } from "../../actions";
@@ -15,6 +16,7 @@ type Props = {
 
 export default async function WorkerDetail({ params, searchParams }: Props) {
   const me = await requireAdmin();
+  const { t, locale } = await getI18n();
   const { id } = await params;
   const months = recentMonths(12);
   const { month: requested, error } = await searchParams;
@@ -40,14 +42,14 @@ export default async function WorkerDetail({ params, searchParams }: Props) {
     .filter((c) => c.status === "approved")
     .reduce((sum, c) => sum + Number(c.multiplier), 0);
 
-  const name = worker.full_name || "(no name)";
+  const name = worker.full_name || t.noName;
 
   return (
     <>
       <TopBar name={me.full_name} role={me.role} />
       <main>
         <Link className="back-link" href={`/admin?month=${month}`}>
-          <ArrowLeftIcon /> All workers
+          <ArrowLeftIcon className="flip-rtl" /> {t.allWorkers}
         </Link>
 
         <section className="card profile">
@@ -57,7 +59,7 @@ export default async function WorkerDetail({ params, searchParams }: Props) {
           <div className="profile-info">
             <h1>{name}</h1>
             <p className="muted">
-              {worker.role === "admin" ? "Admin" : "Worker"}
+              {worker.role === "admin" ? t.admin : t.worker}
               {worker.phone && (
                 <>
                   {" · "}
@@ -70,45 +72,49 @@ export default async function WorkerDetail({ params, searchParams }: Props) {
           </div>
           <div className="profile-days">
             <p className="stat-value">{days}</p>
-            <p className="stat-label">days in {monthLabel(month)}</p>
+            <p className="stat-label">{fill(t.daysInMonth, { month: monthLabel(month, locale) })}</p>
           </div>
         </section>
 
-        {error && <p className="alert alert-error">Could not save: {error}</p>}
+        {error && (
+          <p className="alert alert-error">
+            {t.couldNotSave} {error in t ? t[error as keyof Dict] : error}
+          </p>
+        )}
 
         <div className="row between">
           <form className="row">
-            <select name="month" defaultValue={month} aria-label="Month">
+            <select name="month" defaultValue={month} aria-label={t.month}>
               {months.map((m) => (
                 <option key={m} value={m}>
-                  {monthLabel(m)}
+                  {monthLabel(m, locale)}
                 </option>
               ))}
             </select>
-            <button className="secondary">Show</button>
+            <button className="secondary">{t.show}</button>
           </form>
           {worker.id !== me.id && (
             <form action={setRole}>
               <input type="hidden" name="id" value={worker.id} />
               <input type="hidden" name="role" value={worker.role === "admin" ? "worker" : "admin"} />
-              <button className="link">{worker.role === "admin" ? "Remove admin" : "Make admin"}</button>
+              <button className="link">{worker.role === "admin" ? t.removeAdmin : t.makeAdmin}</button>
             </form>
           )}
         </div>
 
         <section className="stack">
-          {checkins.length === 0 && <div className="card empty">No check-ins this month.</div>}
+          {checkins.length === 0 && <div className="card empty">{t.noCheckinsMonth}</div>}
           {checkins.map((c) => (
             <div key={c.id} className="checkin-group">
-              <CheckinEditor checkin={c} />
+              <CheckinEditor checkin={c} t={t} locale={locale} />
               {c.status === "approved" && (
                 <form action={setPaid} className="paid-bar">
                   <input type="hidden" name="id" value={c.id} />
                   <input type="hidden" name="paid" value={String(!c.paid)} />
                   <span className={`pill ${c.paid ? "pill-ok" : "pill-warn"}`}>
-                    {c.paid ? "Paid" : "Not paid"}
+                    {c.paid ? t.paid : t.notPaid}
                   </span>
-                  <button className="small secondary">{c.paid ? "Mark unpaid" : "Mark paid"}</button>
+                  <button className="small secondary">{c.paid ? t.markUnpaid : t.markPaid}</button>
                 </form>
               )}
             </div>

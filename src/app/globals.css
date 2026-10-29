@@ -49,7 +49,8 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans Arabic",
+    "Noto Sans Hebrew", sans-serif;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -91,6 +92,12 @@ a {
 
 a:hover {
   text-decoration: underline;
+}
+
+[dir="rtl"] .flip-rtl,
+[dir="rtl"] .icon.flip-rtl,
+[dir="rtl"] .flip-rtl .icon {
+  transform: scaleX(-1);
 }
 
 .icon {
@@ -180,7 +187,13 @@ a:hover {
   color: var(--on-brand);
 }
 
-.brand-mark .icon {
+.brand-mark [dir="rtl"] .flip-rtl,
+[dir="rtl"] .icon.flip-rtl,
+[dir="rtl"] .flip-rtl .icon {
+  transform: scaleX(-1);
+}
+
+.icon {
   width: 18px;
   height: 18px;
   stroke-width: 3;
@@ -458,7 +471,13 @@ button.link {
   box-shadow: 0 6px 20px color-mix(in srgb, var(--brand) 35%, transparent);
 }
 
-.checkin-button .icon {
+.checkin-button [dir="rtl"] .flip-rtl,
+[dir="rtl"] .icon.flip-rtl,
+[dir="rtl"] .flip-rtl .icon {
+  transform: scaleX(-1);
+}
+
+.icon {
   width: 24px;
   height: 24px;
 }
@@ -471,7 +490,13 @@ button.link {
   border-radius: 12px;
 }
 
-.status-panel > .icon {
+.status-panel > [dir="rtl"] .flip-rtl,
+[dir="rtl"] .icon.flip-rtl,
+[dir="rtl"] .flip-rtl .icon {
+  transform: scaleX(-1);
+}
+
+.icon {
   width: 28px;
   height: 28px;
   margin-top: 2px;
@@ -537,7 +562,7 @@ button.link {
   font-size: 0.85rem;
   font-weight: 500;
   color: var(--muted);
-  margin-left: 4px;
+  margin-inline-start: 4px;
 }
 
 /* Admin */
@@ -578,19 +603,19 @@ button.link {
 }
 
 .checkin {
-  border-left: 4px solid var(--border);
+  border-inline-start: 4px solid var(--border);
 }
 
 .checkin.pending {
-  border-left-color: var(--warn);
+  border-inline-start-color: var(--warn);
 }
 
 .checkin.approved {
-  border-left-color: var(--ok);
+  border-inline-start-color: var(--ok);
 }
 
 .checkin.rejected {
-  border-left-color: var(--danger);
+  border-inline-start-color: var(--danger);
 }
 
 .checkin-title {
@@ -638,7 +663,7 @@ table {
 }
 
 th {
-  text-align: left;
+  text-align: start;
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -659,7 +684,7 @@ tbody tr:last-child td {
 }
 
 .num {
-  text-align: right;
+  text-align: end;
   font-variant-numeric: tabular-nums;
 }
 
@@ -669,7 +694,7 @@ tbody tr:last-child td {
   gap: 10px;
   color: var(--text);
   font-weight: 600;
-  margin-right: 8px;
+  margin-inline-end: 8px;
 }
 
 .back-link {
@@ -692,5 +717,70 @@ tbody tr:last-child td {
 }
 
 .profile-days {
-  text-align: right;
+  text-align: end;
+}
+
+/* Language switch */
+
+.lang-switch {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.lang-switch button {
+  background: transparent;
+  color: var(--muted);
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  border-radius: 7px;
+}
+
+.lang-switch button:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.lang-switch button.active {
+  background: var(--surface);
+  color: var(--brand);
+  box-shadow: var(--shadow);
+}
+
+.lang-short {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  .lang-switch button {
+    padding: 4px 7px;
+    font-size: 0.75rem;
+  }
+
+  .lang-full,
+  .topbar-user .avatar {
+    display: none;
+  }
+
+  .lang-short {
+    display: inline;
+  }
+
+  .topbar-user {
+    gap: 4px;
+  }
+}
+
+/* Arabic and Hebrew don't use letter-spacing or uppercase. */
+[dir="rtl"] h1,
+[dir="rtl"] h2,
+[dir="rtl"] .brand,
+[dir="rtl"] .month-days,
+[dir="rtl"] .stat-value,
+[dir="rtl"] .eyebrow,
+[dir="rtl"] th {
+  letter-spacing: 0;
 }

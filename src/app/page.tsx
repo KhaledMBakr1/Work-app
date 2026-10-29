@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { firstDayOf, monthKey, monthLabel, recentMonths, todayISO } from "@/lib/months";
 import TopBar from "@/components/TopBar";
 import { CheckIcon, ClockIcon, XIcon } from "@/components/Icons";
+import { fill, getI18n, TIME_ZONE } from "@/lib/i18n";
 import CheckInButton from "./CheckInButton";
 
 type Row = {
@@ -17,6 +18,7 @@ export default async function WorkerHome() {
   const profile = await requireProfile();
   if (profile.role === "admin") redirect("/admin");
 
+  const { t, locale } = await getI18n();
   const months = recentMonths(3);
   const supabase = await createClient();
   const { data } = await supabase
@@ -34,17 +36,18 @@ export default async function WorkerHome() {
     const days = approved.reduce((sum, r) => sum + Number(r.multiplier), 0);
     const paidCount = approved.filter((r) => r.paid).length;
     const pending = inMonth.filter((r) => r.status === "pending").length;
-    let paid = "Not paid yet";
-    if (approved.length === 0) paid = "-";
-    else if (paidCount === approved.length) paid = "Paid";
-    else if (paidCount > 0) paid = "Partly paid";
+    let paid: "none" | "paid" | "partly" | "unpaid" = "unpaid";
+    if (approved.length === 0) paid = "none";
+    else if (paidCount === approved.length) paid = "paid";
+    else if (paidCount > 0) paid = "partly";
     return { month, days, pending, paid };
   });
 
-  const todayLabel = new Date().toLocaleDateString("en-GB", {
+  const todayLabel = new Date().toLocaleDateString(locale, {
     weekday: "long",
     day: "numeric",
     month: "long",
+    timeZone: TIME_ZONE,
   });
 
   return (
@@ -53,7 +56,7 @@ export default async function WorkerHome() {
       <main className="narrow">
         <section className="card today stack">
           <div>
-            <p className="eyebrow">Today</p>
+            <p className="eyebrow">{t.today}</p>
             <h1>{todayLabel}</h1>
           </div>
           {today ? (
@@ -63,38 +66,51 @@ export default async function WorkerHome() {
               {today.status === "rejected" && <XIcon />}
               <div>
                 <strong>
-                  {today.status === "pending" && "Checked in, waiting for approval"}
-                  {today.status === "approved" && "Approved"}
-                  {today.status === "rejected" && "Not approved"}
+                  {today.status === "pending" && t.pendingTitle}
+                  {today.status === "approved" && t.approvedTitle}
+                  {today.status === "rejected" && t.rejectedTitle}
                 </strong>
                 <p>
-                  {today.status === "pending" && "Your admin will confirm this day soon."}
-                  {today.status === "approved" && "This day is counted in your total."}
-                  {today.status === "rejected" && "Talk to your admin if this is a mistake."}
+                  {today.status === "pending" && t.pendingText}
+                  {today.status === "approved" && t.approvedText}
+                  {today.status === "rejected" && t.rejectedText}
                 </p>
               </div>
             </div>
           ) : (
-            <CheckInButton />
+            <CheckInButton
+              text={{
+                noGeolocation: t.noGeolocation,
+                allowLocation: t.allowLocation,
+                gettingLocation: t.gettingLocation,
+                arrived: t.arrived,
+                locationSaved: t.locationSaved,
+                alreadyCheckedIn: t.alreadyCheckedIn,
+              }}
+            />
           )}
         </section>
 
         <section className="stack">
-          <h2>Your days</h2>
+          <h2>{t.yourDays}</h2>
           <div className="month-list">
             {summary.map((s, i) => (
               <div key={s.month} className={`card month ${i === 0 ? "current" : ""}`}>
                 <div>
-                  <p className="month-name">{monthLabel(s.month)}</p>
-                  {s.pending > 0 && <p className="muted small">{s.pending} waiting for approval</p>}
+                  <p className="month-name">{monthLabel(s.month, locale)}</p>
+                  {s.pending > 0 && (
+                    <p className="muted small">{fill(t.waitingForApprovalCount, { n: s.pending })}</p>
+                  )}
                 </div>
                 <div className="month-right">
                   <p className="month-days">
                     {s.days}
-                    <span>{s.days === 1 ? "day" : "days"}</span>
+                    <span>{s.days === 1 ? t.day : t.days}</span>
                   </p>
-                  {s.paid !== "-" && (
-                    <span className={`pill ${s.paid === "Paid" ? "pill-ok" : "pill-warn"}`}>{s.paid}</span>
+                  {s.paid !== "none" && (
+                    <span className={`pill ${s.paid === "paid" ? "pill-ok" : "pill-warn"}`}>
+                      {s.paid === "paid" ? t.paid : s.paid === "partly" ? t.partlyPaid : t.notPaidYet}
+                    </span>
                   )}
                 </div>
               </div>

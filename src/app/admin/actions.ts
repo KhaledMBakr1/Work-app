@@ -16,7 +16,7 @@ function text(formData: FormData, key: string): string | null {
 async function finish(result: { error: { message: string } | null; data?: unknown[] | null }) {
   let message = result.error?.message;
   if (!message && result.data && result.data.length === 0) {
-    message = "Nothing was saved. Refresh the page and try again.";
+    message = "nothingSaved";
   }
   const back = new URL((await headers()).get("referer") ?? "/admin", "http://x");
   const hadError = back.searchParams.has("error");

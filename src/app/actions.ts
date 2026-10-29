@@ -18,7 +18,7 @@ export async function checkIn(position: {
   });
 
   if (error) {
-    if (error.code === "23505") return { ok: false, error: "You already checked in today." };
+    if (error.code === "23505") return { ok: false, error: "alreadyCheckedIn" };
     return { ok: false, error: error.message };
   }
 
