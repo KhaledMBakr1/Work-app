@@ -1,6 +1,8 @@
 // Workers log in with a phone number. Supabase accounts need an email, so each
-// number maps to a fixed address on a reserved domain that never receives mail.
-const PHONE_EMAIL_DOMAIN = "phone.work-app.invalid";
+// number maps to a fixed address. Supabase rejects reserved domains like
+// .invalid, so this uses the app's own domain; no mail is ever sent to it.
+// Never change it: existing workers' logins depend on it.
+const PHONE_EMAIL_DOMAIN = "work-app-lovat.vercel.app";
 
 export function normalizePhone(input: string): string {
   return input.replace(/\D/g, "").replace(/^00/, "");
