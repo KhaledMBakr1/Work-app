@@ -61,6 +61,7 @@ const en = {
 
   noGeolocation: "This phone or browser can't share its location.",
   allowLocation: "Please allow location access so your workplace can be recorded.",
+  locationUnavailable: "Couldn't find your location. Step outside or near a window and try again.",
   gettingLocation: "Getting your location…",
   arrived: "I've arrived at work",
   locationSaved: "Your location is saved with your check-in.",
@@ -195,6 +196,7 @@ const ar: Dict = {
 
   noGeolocation: "هذا الهاتف أو المتصفح لا يستطيع مشاركة الموقع.",
   allowLocation: "يرجى السماح بالوصول إلى الموقع لتسجيل مكان العمل.",
+  locationUnavailable: "تعذّر تحديد موقعك. اخرج أو اقترب من نافذة وحاول مرة أخرى.",
   gettingLocation: "جارٍ تحديد موقعك…",
   arrived: "وصلت إلى العمل",
   locationSaved: "يتم حفظ موقعك مع تسجيل الحضور.",
@@ -327,6 +329,7 @@ const he: Dict = {
 
   noGeolocation: "הטלפון או הדפדפן הזה לא יכול לשתף מיקום.",
   allowLocation: "נא לאפשר גישה למיקום כדי לתעד את מקום העבודה.",
+  locationUnavailable: "לא הצלחנו לאתר את המיקום שלך. צא החוצה או התקרב לחלון ונסה שוב.",
   gettingLocation: "מאתר את המיקום שלך…",
   arrived: "הגעתי לעבודה",
   locationSaved: "המיקום שלך נשמר יחד עם הכניסה.",
