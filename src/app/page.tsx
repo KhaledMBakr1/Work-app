@@ -50,6 +50,7 @@ export default async function WorkerHome() {
     gettingLocation: t.gettingLocation,
     noGeolocation: t.noGeolocation,
     allowLocation: t.allowLocation,
+    locationUnavailable: t.locationUnavailable,
     errors: { alreadyCheckedIn: t.alreadyCheckedIn, noOpenCheckin: t.noOpenCheckin },
   };
 

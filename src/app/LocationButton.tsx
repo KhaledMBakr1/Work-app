@@ -10,6 +10,7 @@ type Text = {
   gettingLocation: string;
   noGeolocation: string;
   allowLocation: string;
+  locationUnavailable: string;
   // Translations for the error codes the server can return.
   errors: Record<string, string>;
 };
@@ -26,22 +27,37 @@ export default function LocationButton({ kind, text }: { kind: "in" | "out"; tex
       return;
     }
     setBusy(true);
+
+    async function save({ coords }: GeolocationPosition) {
+      const position = {
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        accuracy: coords.accuracy,
+      };
+      const result = kind === "in" ? await checkIn(position) : await checkOut(position);
+      if (!result.ok) setError(text.errors[result.error] ?? result.error);
+      setBusy(false);
+    }
+
+    function fail(err: GeolocationPositionError) {
+      setError(err.code === err.PERMISSION_DENIED ? text.allowLocation : text.locationUnavailable);
+      setBusy(false);
+    }
+
+    // Safari on iPhone often times out or reports "unavailable" when asked for
+    // a precise GPS fix indoors. Try precise first, then fall back to a
+    // quicker, less precise (or recent cached) location before giving up.
     navigator.geolocation.getCurrentPosition(
-      async ({ coords }) => {
-        const position = {
-          latitude: coords.latitude,
-          longitude: coords.longitude,
-          accuracy: coords.accuracy,
-        };
-        const result = kind === "in" ? await checkIn(position) : await checkOut(position);
-        if (!result.ok) setError(text.errors[result.error] ?? result.error);
-        setBusy(false);
+      save,
+      (err) => {
+        if (err.code === err.PERMISSION_DENIED) return fail(err);
+        navigator.geolocation.getCurrentPosition(save, fail, {
+          enableHighAccuracy: false,
+          timeout: 15000,
+          maximumAge: 5 * 60 * 1000,
+        });
       },
-      () => {
-        setError(text.allowLocation);
-        setBusy(false);
-      },
-      { enableHighAccuracy: true, timeout: 20000 },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60 * 1000 },
     );
   }
 
