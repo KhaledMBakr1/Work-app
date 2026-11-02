@@ -4,11 +4,20 @@ import { useState } from "react";
 
 type Props = {
   link: string;
-  text: { copyLink: string; copied: string; shareWhatsApp: string; whatsappMessage: string };
+  qr: string;
+  qrFileName: string;
+  text: {
+    copyLink: string;
+    copied: string;
+    shareWhatsApp: string;
+    whatsappMessage: string;
+    scanToJoin: string;
+    downloadQr: string;
+  };
 };
 
-// The invite link with copy and WhatsApp buttons.
-export default function InviteLink({ link, text }: Props) {
+// The invite link with copy and WhatsApp buttons, and a QR code workers can scan.
+export default function InviteLink({ link, qr, qrFileName, text }: Props) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -39,6 +48,16 @@ export default function InviteLink({ link, text }: Props) {
           {text.shareWhatsApp}
         </a>
       </div>
+      {qr && (
+        <div className="invite-qr">
+          <p className="muted small">{text.scanToJoin}</p>
+          {/* eslint-disable-next-line @next/next/no-img-element -- inline data URL */}
+          <img src={qr} alt={link} width={240} height={240} />
+          <a className="button secondary" href={qr} download={qrFileName}>
+            {text.downloadQr}
+          </a>
+        </div>
+      )}
     </div>
   );
 }
