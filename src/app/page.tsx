@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { firstDayOf, monthKey, monthLabel, recentMonths } from "@/lib/months";
-import { formatDuration, formatTime, localToday } from "@/lib/time";
+import { formatDuration, formatTime, hasTimes, localToday } from "@/lib/time";
 import TopBar from "@/components/TopBar";
 import { CheckIcon, ClockIcon, XIcon } from "@/components/Icons";
 import { fill, getI18n, TIME_ZONE } from "@/lib/i18n";
@@ -89,6 +89,7 @@ export default async function WorkerHome() {
                 </p>
               </div>
             </div>
+            {hasTimes(today.checked_in_at, today.checked_out_at) && (
             <div className="times">
               <div>
                 <span className="muted small">{t.inLabel}</span>
@@ -107,6 +108,7 @@ export default async function WorkerHome() {
                 </strong>
               </div>
             </div>
+            )}
             {!today.checked_out_at && (
               <LocationButton kind="out" text={{ ...locationText, label: t.leaving, hint: t.leavingHint }} />
             )}

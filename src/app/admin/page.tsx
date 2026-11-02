@@ -8,14 +8,15 @@ import { firstDayOf, monthLabel, nextMonthStart, recentMonths } from "@/lib/mont
 import { markMonthPaid, regenerateInvite } from "./actions";
 import InviteLink from "./InviteLink";
 import CheckinEditor, { CHECKIN_COLUMNS, type Checkin } from "./CheckinEditor";
+import AddDayForm, { isAddDayError } from "./AddDayForm";
 
-type Props = { searchParams: Promise<{ month?: string; error?: string }> };
+type Props = { searchParams: Promise<{ month?: string; error?: string; added?: string }> };
 
 export default async function AdminHome({ searchParams }: Props) {
   const me = await requireAdmin();
   const { t, locale } = await getI18n();
   const months = recentMonths(12);
-  const { month: requested, error } = await searchParams;
+  const { month: requested, error, added } = await searchParams;
   const month = requested && months.includes(requested) ? requested : months[0];
 
   const supabase = await createClient();
@@ -67,6 +68,7 @@ export default async function AdminHome({ searchParams }: Props) {
             {t.couldNotSave} {error in t ? t[error as keyof Dict] : error}
           </p>
         )}
+        {added && !error && <p className="alert alert-ok">{fill(t.dayAdded, { date: added })}</p>}
 
         <div className="stats">
           <div className="card stat">
@@ -96,6 +98,12 @@ export default async function AdminHome({ searchParams }: Props) {
             <CheckinEditor key={c.id} checkin={c} workerName={names.get(c.worker_id)} t={t} locale={locale} />
           ))}
         </section>
+
+        <AddDayForm
+          t={t}
+          workers={(profiles ?? []).map((p) => ({ id: p.id, name: p.full_name || t.noName }))}
+          open={isAddDayError(error)}
+        />
 
         <section className="card stack">
           <div className="row between">

@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { firstDayOf, nextMonthStart } from "@/lib/months";
+import { localToday, zonedToIso } from "@/lib/time";
 
 function text(formData: FormData, key: string): string | null {
   const value = String(formData.get(key) ?? "").trim();
@@ -52,6 +53,64 @@ export async function saveCheckin(decision: "approve" | "reject" | "save", formD
   await finish(
     await supabase.from("checkins").update(update).eq("id", Number(formData.get("id"))).select("id"),
   );
+}
+
+// Adds a work day for a worker by hand, without a check-in or location.
+// Days the admin adds are approved straight away.
+export async function addDay(formData: FormData) {
+  const admin = await requireAdmin();
+  const supabase = await createClient();
+
+  const workerId = String(formData.get("worker_id") ?? "");
+  const date = String(formData.get("work_date") ?? "");
+  const start = text(formData, "start_time");
+  const end = text(formData, "end_time");
+  const fail = (message: string) => finish({ error: { message } });
+
+  if (!workerId) return fail("pickWorker");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return fail("pickDate");
+  if (date > localToday()) return fail("futureDate");
+  if (end && !start) return fail("startNeeded");
+
+  // Without times, in and out are the same moment, which the app shows as "no times".
+  const checkedIn = zonedToIso(date, start ?? "12:00");
+  let checkedOut: string | null = start ? null : checkedIn;
+  if (start && end) {
+    checkedOut = zonedToIso(date, end);
+    // An end time earlier than the start means the shift ran past midnight.
+    if (checkedOut <= checkedIn) {
+      checkedOut = new Date(Date.parse(checkedOut) + 24 * 60 * 60 * 1000).toISOString();
+    }
+  }
+
+  const multiplier = Number(formData.get("multiplier") ?? 1);
+  const now = new Date().toISOString();
+  const result = await supabase
+    .from("checkins")
+    .insert({
+      worker_id: workerId,
+      work_date: date,
+      checked_in_at: checkedIn,
+      checked_out_at: checkedOut,
+      status: "approved",
+      multiplier: [1, 1.5, 2].includes(multiplier) ? multiplier : 1,
+      place: text(formData, "place"),
+      client: text(formData, "client"),
+      note: text(formData, "note"),
+      reviewed_by: admin.id,
+      reviewed_at: now,
+    })
+    .select("id");
+
+  if (result.error?.code === "23505") return fail("dayExists");
+  if (result.error?.code === "42501") return fail("notYourWorker");
+  if (result.error || !result.data?.length) return finish(result);
+
+  revalidatePath("/admin", "layout");
+  const back = new URL((await headers()).get("referer") ?? "/admin", "http://x");
+  back.searchParams.delete("error");
+  back.searchParams.set("added", date);
+  redirect(back.pathname + back.search);
 }
 
 export async function setPaid(formData: FormData) {
