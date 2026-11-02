@@ -1,6 +1,6 @@
 import { CheckIcon, PinIcon, XIcon } from "@/components/Icons";
 import { fill, type Dict } from "@/lib/i18n";
-import { formatDuration, formatTime } from "@/lib/time";
+import { formatDuration, formatTime, hasTimes } from "@/lib/time";
 import { mapLink } from "@/lib/months";
 import { saveCheckin } from "./actions";
 
@@ -31,9 +31,12 @@ type Props = { checkin: Checkin; workerName?: string; t: Dict; locale: string };
 export default function CheckinEditor({ checkin, workerName, t, locale }: Props) {
   const map = mapLink(checkin.latitude, checkin.longitude);
   const exitMap = mapLink(checkin.out_latitude, checkin.out_longitude);
-  const timeIn = formatTime(checkin.checked_in_at, locale);
-  const timeOut = checkin.checked_out_at ? formatTime(checkin.checked_out_at, locale) : t.notYet;
-  const hours = checkin.checked_out_at
+  // Worker check-ins always carry a location; days the admin added don't.
+  const byAdmin = checkin.latitude == null;
+  const timed = hasTimes(checkin.checked_in_at, checkin.checked_out_at);
+  const timeIn = timed ? formatTime(checkin.checked_in_at, locale) : t.notYet;
+  const timeOut = timed && checkin.checked_out_at ? formatTime(checkin.checked_out_at, locale) : t.notYet;
+  const hours = timed && checkin.checked_out_at
     ? formatDuration(checkin.checked_in_at, checkin.checked_out_at, t.hoursFormat)
     : t.notYet;
 
@@ -56,6 +59,8 @@ export default function CheckinEditor({ checkin, workerName, t, locale }: Props)
           <a href={map} target="_blank" rel="noreferrer">
             {t.seeOnMap}
           </a>
+        ) : byAdmin ? (
+          t.addedByAdmin
         ) : (
           t.noLocation
         )}

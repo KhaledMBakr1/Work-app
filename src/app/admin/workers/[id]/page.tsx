@@ -8,10 +8,11 @@ import { createClient } from "@/lib/supabase/server";
 import { firstDayOf, monthLabel, nextMonthStart, recentMonths } from "@/lib/months";
 import { removeFromBusiness, setPaid, setRole } from "../../actions";
 import CheckinEditor, { CHECKIN_COLUMNS, type Checkin } from "../../CheckinEditor";
+import AddDayForm, { isAddDayError } from "../../AddDayForm";
 
 type Props = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ month?: string; error?: string }>;
+  searchParams: Promise<{ month?: string; error?: string; added?: string }>;
 };
 
 export default async function WorkerDetail({ params, searchParams }: Props) {
@@ -19,7 +20,7 @@ export default async function WorkerDetail({ params, searchParams }: Props) {
   const { t, locale } = await getI18n();
   const { id } = await params;
   const months = recentMonths(12);
-  const { month: requested, error } = await searchParams;
+  const { month: requested, error, added } = await searchParams;
   const month = requested && months.includes(requested) ? requested : months[0];
 
   const supabase = await createClient();
@@ -81,6 +82,7 @@ export default async function WorkerDetail({ params, searchParams }: Props) {
             {t.couldNotSave} {error in t ? t[error as keyof Dict] : error}
           </p>
         )}
+        {added && !error && <p className="alert alert-ok">{fill(t.dayAdded, { date: added })}</p>}
 
         <div className="row between">
           <form className="row">
@@ -107,6 +109,8 @@ export default async function WorkerDetail({ params, searchParams }: Props) {
             </div>
           )}
         </div>
+
+        <AddDayForm t={t} workerId={worker.id} open={isAddDayError(error)} />
 
         <section className="stack">
           {checkins.length === 0 && <div className="card empty">{t.noCheckinsMonth}</div>}

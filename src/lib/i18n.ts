@@ -146,6 +146,20 @@ const en = {
   newLinkHint: "The old link will stop working.",
   whatsappMessage: "Join {business} on WorkDays: {link}",
   removeFromBusiness: "Remove from business",
+  addDay: "Add a work day",
+  addDayHint: "For a worker who didn't check in. The day is approved right away.",
+  addDayButton: "Add day",
+  pickWorker: "Choose a worker",
+  date: "Date",
+  startTime: "Start time",
+  endTime: "End time",
+  pickDate: "Please choose a date.",
+  futureDate: "You can't add a day in the future.",
+  startNeeded: "Add a start time too, or leave both times empty.",
+  dayExists: "This worker already has this day. Edit it in the worker's list.",
+  notYourWorker: "This worker isn't in your business.",
+  dayAdded: "Day added: {date}.",
+  addedByAdmin: "Added by admin",
 };
 
 export type Dict = typeof en;
@@ -281,6 +295,20 @@ const ar: Dict = {
   newLinkHint: "الرابط القديم سيتوقف عن العمل.",
   whatsappMessage: "انضم إلى {business} في WorkDays: {link}",
   removeFromBusiness: "إزالة من المصلحة",
+  addDay: "إضافة يوم عمل",
+  addDayHint: "لعامل لم يسجّل حضوره. اليوم يُعتمد فورًا.",
+  addDayButton: "إضافة اليوم",
+  pickWorker: "اختر عاملًا",
+  date: "التاريخ",
+  startTime: "وقت البدء",
+  endTime: "وقت الانتهاء",
+  pickDate: "يرجى اختيار تاريخ.",
+  futureDate: "لا يمكن إضافة يوم في المستقبل.",
+  startNeeded: "أضف وقت البدء أيضًا، أو اترك الوقتين فارغين.",
+  dayExists: "هذا اليوم موجود لهذا العامل. عدّله في قائمة العامل.",
+  notYourWorker: "هذا العامل ليس في عملك.",
+  dayAdded: "تمت إضافة اليوم: {date}.",
+  addedByAdmin: "أضافه المدير",
 };
 
 const he: Dict = {
@@ -414,6 +442,20 @@ const he: Dict = {
   newLinkHint: "הקישור הישן יפסיק לעבוד.",
   whatsappMessage: "הצטרף ל{business} ב־WorkDays: {link}",
   removeFromBusiness: "הסר מהעסק",
+  addDay: "הוספת יום עבודה",
+  addDayHint: "לעובד שלא החתים כניסה. היום מאושר מיד.",
+  addDayButton: "הוספת יום",
+  pickWorker: "בחר עובד",
+  date: "תאריך",
+  startTime: "שעת התחלה",
+  endTime: "שעת סיום",
+  pickDate: "נא לבחור תאריך.",
+  futureDate: "אי אפשר להוסיף יום בעתיד.",
+  startNeeded: "הוסף גם שעת התחלה, או השאר את שתי השעות ריקות.",
+  dayExists: "כבר קיים יום כזה לעובד הזה. ערוך אותו ברשימה של העובד.",
+  notYourWorker: "העובד הזה לא שייך לעסק שלך.",
+  dayAdded: "היום נוסף: {date}.",
+  addedByAdmin: "נוסף על ידי המנהל",
 };
 
 export const DICTS: Record<Lang, Dict> = { en, ar, he };
