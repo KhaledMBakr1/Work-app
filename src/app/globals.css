@@ -401,6 +401,25 @@ button.link {
   color: var(--ok);
 }
 
+.alert-warn {
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-weight: 600;
+}
+
+/* Unpaid days per worker (admin table) */
+
+.owed {
+  display: block;
+  color: var(--warn);
+  font-size: 1.05rem;
+}
+
+.owed-months {
+  display: block;
+  white-space: nowrap;
+}
+
 /* Pills */
 
 .pill {

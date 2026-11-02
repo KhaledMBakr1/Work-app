@@ -36,3 +36,13 @@ export function mapLink(latitude: number | null, longitude: number | null): stri
   if (latitude == null || longitude == null) return null;
   return `https://www.google.com/maps?q=${latitude},${longitude}`;
 }
+
+export function monthShort(month: MonthKey, locale: string): string {
+  const [y, m] = month.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString(locale, { month: "short", timeZone: "UTC" });
+}
+
+// Days a list of approved check-ins is worth, counting 1.5x / 2x days.
+export function sumDays(rows: { multiplier: number | string }[]): number {
+  return rows.reduce((sum, r) => sum + Number(r.multiplier), 0);
+}

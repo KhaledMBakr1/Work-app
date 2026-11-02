@@ -5,7 +5,7 @@ import TopBar from "@/components/TopBar";
 import { requireAdmin } from "@/lib/auth";
 import { fill, getI18n, type Dict } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
-import { firstDayOf, monthLabel, nextMonthStart, recentMonths } from "@/lib/months";
+import { firstDayOf, monthKey, monthLabel, monthShort, nextMonthStart, recentMonths, sumDays } from "@/lib/months";
 import { markMonthPaid, regenerateInvite } from "./actions";
 import InviteLink from "./InviteLink";
 import CheckinEditor, { CHECKIN_COLUMNS, type Checkin } from "./CheckinEditor";
@@ -20,8 +20,11 @@ export default async function AdminHome({ searchParams }: Props) {
   const { month: requested, error, added } = await searchParams;
   const month = requested && months.includes(requested) ? requested : months[0];
 
+  const unpaidMonths = recentMonths(3);
+
   const supabase = await createClient();
-  const [{ data: business }, { data: profiles }, { data: pending }, { data: monthRows }] = await Promise.all([
+  const [{ data: business }, { data: profiles }, { data: pending }, { data: monthRows }, { data: unpaidRows }] =
+    await Promise.all([
     supabase.from("businesses").select("name, invite_code").eq("id", me.business_id!).single(),
     supabase.from("profiles").select("id, full_name, role").order("full_name"),
     supabase
@@ -34,6 +37,12 @@ export default async function AdminHome({ searchParams }: Props) {
       .select("worker_id, status, multiplier, paid, place")
       .gte("work_date", firstDayOf(month))
       .lt("work_date", nextMonthStart(month)),
+    supabase
+      .from("checkins")
+      .select("worker_id, work_date, multiplier")
+      .eq("status", "approved")
+      .eq("paid", false)
+      .gte("work_date", firstDayOf(unpaidMonths[unpaidMonths.length - 1])),
   ]);
 
   const names = new Map((profiles ?? []).map((p) => [p.id, p.full_name || t.noName]));
@@ -48,7 +57,21 @@ export default async function AdminHome({ searchParams }: Props) {
       const unpaid = approved.filter((r) => !r.paid).length;
       const waiting = mine.filter((r) => r.status === "pending").length;
       const places = [...new Set(approved.map((r) => r.place).filter(Boolean))];
-      return { id: p.id, name: p.full_name || t.noName, days, unpaid, waiting, places, approved: approved.length };
+      const owed = (unpaidRows ?? []).filter((r) => r.worker_id === p.id);
+      const owedByMonth = unpaidMonths
+        .map((m) => ({ month: m, days: sumDays(owed.filter((r) => monthKey(r.work_date) === m)) }))
+        .filter((m) => m.days > 0);
+      return {
+        id: p.id,
+        name: p.full_name || t.noName,
+        days,
+        unpaid,
+        waiting,
+        places,
+        approved: approved.length,
+        owedDays: sumDays(owed),
+        owedByMonth,
+      };
     });
 
   const host = (await headers()).get("host") ?? "";
@@ -134,6 +157,7 @@ export default async function AdminHome({ searchParams }: Props) {
                     <th className="num">{t.days}</th>
                     <th>{t.where}</th>
                     <th>{t.paid}</th>
+                    <th className="num">{t.unpaidLast3}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -161,6 +185,18 @@ export default async function AdminHome({ searchParams }: Props) {
                             <input type="hidden" name="month" value={month} />
                             <button className="small">{t.markPaid}</button>
                           </form>
+                        )}
+                      </td>
+                      <td className="num">
+                        {w.owedDays === 0 ? (
+                          <span className="muted">0</span>
+                        ) : (
+                          <>
+                            <strong className="owed">{w.owedDays}</strong>
+                            <span className="owed-months muted small">
+                              {w.owedByMonth.map((m) => `${monthShort(m.month, locale)} ${m.days}`).join(" · ")}
+                            </span>
+                          </>
                         )}
                       </td>
                     </tr>

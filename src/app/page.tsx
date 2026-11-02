@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { firstDayOf, monthKey, monthLabel, recentMonths } from "@/lib/months";
+import { firstDayOf, monthKey, monthLabel, recentMonths, sumDays } from "@/lib/months";
 import { formatDuration, formatTime, hasTimes, localToday } from "@/lib/time";
 import TopBar from "@/components/TopBar";
 import { CheckIcon, ClockIcon, XIcon } from "@/components/Icons";
@@ -36,15 +36,18 @@ export default async function WorkerHome() {
   const summary = months.map((month) => {
     const inMonth = rows.filter((r) => monthKey(r.work_date) === month);
     const approved = inMonth.filter((r) => r.status === "approved");
-    const days = approved.reduce((sum, r) => sum + Number(r.multiplier), 0);
+    const days = sumDays(approved);
+    const unpaidDays = sumDays(approved.filter((r) => !r.paid));
     const paidCount = approved.filter((r) => r.paid).length;
     const pending = inMonth.filter((r) => r.status === "pending").length;
     let paid: "none" | "paid" | "partly" | "unpaid" = "unpaid";
     if (approved.length === 0) paid = "none";
     else if (paidCount === approved.length) paid = "paid";
     else if (paidCount > 0) paid = "partly";
-    return { month, days, pending, paid };
+    return { month, days, unpaidDays, pending, paid };
   });
+
+  const unpaidTotal = summary.reduce((sum, s) => sum + s.unpaidDays, 0);
 
   const locationText = {
     gettingLocation: t.gettingLocation,
@@ -120,6 +123,11 @@ export default async function WorkerHome() {
 
         <section className="stack">
           <h2>{t.yourDays}</h2>
+          {unpaidTotal > 0 && (
+            <p className="alert alert-warn">
+              {fill(t.unpaidTotal, { n: unpaidTotal, days: unpaidTotal === 1 ? t.day : t.days })}
+            </p>
+          )}
           <div className="month-list">
             {summary.map((s, i) => (
               <div key={s.month} className={`card month ${i === 0 ? "current" : ""}`}>
@@ -138,6 +146,9 @@ export default async function WorkerHome() {
                     <span className={`pill ${s.paid === "paid" ? "pill-ok" : "pill-warn"}`}>
                       {s.paid === "paid" ? t.paid : s.paid === "partly" ? t.partlyPaid : t.notPaidYet}
                     </span>
+                  )}
+                  {s.paid === "partly" && (
+                    <span className="muted small">{fill(t.unpaidInMonth, { n: s.unpaidDays })}</span>
                   )}
                 </div>
               </div>
