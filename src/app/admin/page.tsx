@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { headers } from "next/headers";
+import QRCode from "qrcode";
 import TopBar from "@/components/TopBar";
 import { requireAdmin } from "@/lib/auth";
 import { fill, getI18n, type Dict } from "@/lib/i18n";
@@ -54,6 +55,9 @@ export default async function AdminHome({ searchParams }: Props) {
   const protocol = host.startsWith("localhost") ? "http" : "https";
   const inviteUrl = business ? `${protocol}://${host}/join/${business.invite_code}` : "";
   const businessName = business?.name ?? "";
+  const inviteQr = inviteUrl
+    ? await QRCode.toDataURL(inviteUrl, { width: 480, margin: 2, errorCorrectionLevel: "M" })
+    : "";
 
   const totalDays = overview.reduce((sum, w) => sum + w.days, 0);
   const unpaidWorkers = overview.filter((w) => w.unpaid > 0).length;
@@ -175,10 +179,14 @@ export default async function AdminHome({ searchParams }: Props) {
             <p className="muted">{fill(t.inviteText, { business: businessName })}</p>
             <InviteLink
               link={inviteUrl}
+              qr={inviteQr}
+              qrFileName={`${businessName || "invite"}-qr.png`}
               text={{
                 copyLink: t.copyLink,
                 copied: t.copied,
                 shareWhatsApp: t.shareWhatsApp,
+                scanToJoin: t.scanToJoin,
+                downloadQr: t.downloadQr,
                 whatsappMessage: fill(t.whatsappMessage, { business: businessName, link: inviteUrl }),
               }}
             />
