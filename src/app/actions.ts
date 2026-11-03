@@ -16,7 +16,9 @@ export async function checkIn(position: Position): Promise<LocationResult> {
   });
 
   if (error) {
-    if (error.code === "23505") return { ok: false, error: "alreadyCheckedIn" };
+    if (error.code === "23505" || error.message.includes("already_checked_in")) {
+      return { ok: false, error: "alreadyCheckedIn" };
+    }
     return { ok: false, error: error.message };
   }
 

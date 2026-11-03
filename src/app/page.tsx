@@ -31,7 +31,11 @@ export default async function WorkerHome() {
     .gte("work_date", firstDayOf(months[months.length - 1]));
   const rows = (data ?? []) as Row[];
 
-  const today = rows.find((r) => r.work_date === localToday());
+  // A worker can check in again after checking out, so a date can hold more than one day.
+  const todays = rows
+    .filter((r) => r.work_date === localToday())
+    .sort((a, b) => a.checked_in_at.localeCompare(b.checked_in_at));
+  const today = todays[todays.length - 1];
 
   const summary = months.map((month) => {
     const inMonth = rows.filter((r) => monthKey(r.work_date) === month);
@@ -72,6 +76,7 @@ export default async function WorkerHome() {
           <div>
             <p className="eyebrow">{t.today}</p>
             <h1>{todayLabel}</h1>
+            {todays.length > 1 && <p className="muted small">{fill(t.daysToday, { n: todays.length })}</p>}
           </div>
           {today ? (
             <>
@@ -112,8 +117,10 @@ export default async function WorkerHome() {
               </div>
             </div>
             )}
-            {!today.checked_out_at && (
+            {!today.checked_out_at ? (
               <LocationButton kind="out" text={{ ...locationText, label: t.leaving, hint: t.leavingHint }} />
+            ) : (
+              <LocationButton kind="in" text={{ ...locationText, label: t.anotherDay, hint: t.anotherDayHint }} />
             )}
             </>
           ) : (

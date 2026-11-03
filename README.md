@@ -10,7 +10,7 @@ Built with Next.js and Supabase (login and database).
 ## Setup
 
 1. Create a free project at [supabase.com](https://supabase.com).
-2. In the Supabase dashboard, open **SQL Editor** and run each file in `supabase/migrations/` in order (`0001`, `0002`, `0003`). They are safe to run again.
+2. In the Supabase dashboard, open **SQL Editor** and run each file in `supabase/migrations/` in order (`0001` to `0004`). They are safe to run again.
 3. Copy `.env.example` to `.env.local` and fill in the URL and anon key from **Project Settings > API**.
 4. Run the app:
    ```

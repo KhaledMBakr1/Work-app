@@ -37,7 +37,8 @@ export default async function WorkerDetail({ params, searchParams }: Props) {
     .eq("worker_id", id)
     .gte("work_date", firstDayOf(month))
     .lt("work_date", nextMonthStart(month))
-    .order("work_date");
+    .order("work_date")
+    .order("checked_in_at");
   const checkins = (data ?? []) as Checkin[];
   const days = checkins
     .filter((c) => c.status === "approved")
