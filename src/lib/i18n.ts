@@ -58,6 +58,9 @@ const en = {
   partlyPaid: "Partly paid",
   notPaidYet: "Not paid yet",
   notPaid: "Not paid",
+  unpaidLast3: "Not paid (3 months)",
+  unpaidTotal: "{n} {days} not paid yet in the last 3 months",
+  unpaidInMonth: "{n} not paid",
 
   noGeolocation: "This phone or browser can't share its location.",
   allowLocation: "Please allow location access so your workplace can be recorded.",
@@ -209,6 +212,9 @@ const ar: Dict = {
   partlyPaid: "مدفوع جزئيًا",
   notPaidYet: "لم يُدفع بعد",
   notPaid: "غير مدفوع",
+  unpaidLast3: "غير مدفوع (آخر 3 أشهر)",
+  unpaidTotal: "{n} {days} لم تُدفع بعد خلال آخر 3 أشهر",
+  unpaidInMonth: "{n} غير مدفوع",
 
   noGeolocation: "هذا الهاتف أو المتصفح لا يستطيع مشاركة الموقع.",
   allowLocation: "يرجى السماح بالوصول إلى الموقع لتسجيل مكان العمل.",
@@ -358,6 +364,9 @@ const he: Dict = {
   partlyPaid: "שולם חלקית",
   notPaidYet: "עדיין לא שולם",
   notPaid: "לא שולם",
+  unpaidLast3: "לא שולם (3 חודשים)",
+  unpaidTotal: "{n} {days} עדיין לא שולמו ב-3 החודשים האחרונים",
+  unpaidInMonth: "{n} לא שולמו",
 
   noGeolocation: "הטלפון או הדפדפן הזה לא יכול לשתף מיקום.",
   allowLocation: "נא לאפשר גישה למיקום כדי לתעד את מקום העבודה.",
