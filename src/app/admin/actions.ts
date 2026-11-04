@@ -32,6 +32,13 @@ async function finish(result: { error: { message: string } | null; data?: unknow
   }
 }
 
+// How much a day counts for: half a day, one day, a day and a half, or two days.
+const MULTIPLIERS = [0.5, 1, 1.5, 2];
+function readMultiplier(formData: FormData): number {
+  const value = Number(formData.get("multiplier") ?? 1);
+  return MULTIPLIERS.includes(value) ? value : 1;
+}
+
 // Approve, reject or edit a check-in, with the multiplier and the admin's note.
 // Each button binds its own decision, because a clicked button's name/value isn't sent with the form.
 export async function saveCheckin(decision: "approve" | "reject" | "save", formData: FormData) {
@@ -39,7 +46,7 @@ export async function saveCheckin(decision: "approve" | "reject" | "save", formD
   const supabase = await createClient();
 
   const update: Record<string, unknown> = {
-    multiplier: Number(formData.get("multiplier") ?? 1),
+    multiplier: readMultiplier(formData),
     place: text(formData, "place"),
     client: text(formData, "client"),
     note: text(formData, "note"),
@@ -83,7 +90,6 @@ export async function addDay(formData: FormData) {
     }
   }
 
-  const multiplier = Number(formData.get("multiplier") ?? 1);
   const now = new Date().toISOString();
   const result = await supabase
     .from("checkins")
@@ -93,7 +99,7 @@ export async function addDay(formData: FormData) {
       checked_in_at: checkedIn,
       checked_out_at: checkedOut,
       status: "approved",
-      multiplier: [1, 1.5, 2].includes(multiplier) ? multiplier : 1,
+      multiplier: readMultiplier(formData),
       place: text(formData, "place"),
       client: text(formData, "client"),
       note: text(formData, "note"),

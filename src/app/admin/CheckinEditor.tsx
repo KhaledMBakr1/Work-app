@@ -80,6 +80,7 @@ export default function CheckinEditor({ checkin, workerName, t, locale }: Props)
         <label>
           {t.countsAs}
           <select name="multiplier" defaultValue={String(Number(checkin.multiplier))}>
+            <option value="0.5">{t.halfDay}</option>
             <option value="1">{t.oneDay}</option>
             <option value="1.5">{t.oneHalfDays}</option>
             <option value="2">{t.twoDays}</option>

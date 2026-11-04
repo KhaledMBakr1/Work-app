@@ -65,7 +65,8 @@ export default function AddDayForm({ t, workers, workerId, open }: Props) {
           <label>
             {t.countsAs}
             <select name="multiplier" defaultValue="1">
-              <option value="1">{t.oneDay}</option>
+              <option value="0.5">{t.halfDay}</option>
+            <option value="1">{t.oneDay}</option>
               <option value="1.5">{t.oneHalfDays}</option>
               <option value="2">{t.twoDays}</option>
             </select>
